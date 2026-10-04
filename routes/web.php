@@ -16,6 +16,9 @@ use App\Modules\Opd\Http\Controllers\OpdVisitController;
 use App\Modules\Opd\Http\Controllers\PrescriptionController;
 use App\Modules\OperationTheatre\Http\Controllers\OperationTheatreController;
 use App\Modules\Patient\Http\Controllers\PatientController;
+use App\Modules\Pharmacy\Http\Controllers\DispensingController;
+use App\Modules\Pharmacy\Http\Controllers\MedicineController;
+use App\Modules\Pharmacy\Http\Controllers\ProcurementController;
 use App\Modules\RBAC\Http\Controllers\RoleController;
 use App\Modules\Tenancy\Models\Branch;
 use App\Modules\Tenancy\Models\Tenant;
@@ -147,4 +150,21 @@ Route::middleware('auth')->group(function () {
     Route::post('/operation-theatres/surgeries', [OperationTheatreController::class, 'scheduleSurgery'])->name('operation_theatres.surgeries.schedule');
     Route::patch('/operation-theatres/surgeries/{surgery}/status', [OperationTheatreController::class, 'updateStatus'])->name('operation_theatres.surgeries.status');
     Route::post('/operation-theatres/surgeries/{surgery}/checklist', [OperationTheatreController::class, 'saveChecklist'])->name('operation_theatres.surgeries.checklist');
+
+    // Phase 6: Pharmacy Medicine Catalog & FEFO Stock
+    Route::get('/pharmacy/medicines', [MedicineController::class, 'index'])->name('pharmacy.medicines.index');
+    Route::post('/pharmacy/medicines', [MedicineController::class, 'store'])->name('pharmacy.medicines.store');
+    Route::put('/pharmacy/medicines/{medicine}', [MedicineController::class, 'update'])->name('pharmacy.medicines.update');
+    Route::post('/pharmacy/batches/{batch}/adjust', [MedicineController::class, 'adjustStock'])->name('pharmacy.batches.adjust');
+
+    // Phase 6: Pharmacy FEFO Dispensing Workstation
+    Route::get('/pharmacy/dispense', [DispensingController::class, 'index'])->name('pharmacy.dispense.index');
+    Route::post('/pharmacy/dispense/preview', [DispensingController::class, 'previewFefo'])->name('pharmacy.dispense.preview');
+    Route::post('/pharmacy/dispense', [DispensingController::class, 'store'])->name('pharmacy.dispense.store');
+
+    // Phase 6: Supply Chain & Procurement (PO, GRN, Suppliers)
+    Route::get('/pharmacy/procurement', [ProcurementController::class, 'index'])->name('pharmacy.procurement.index');
+    Route::post('/pharmacy/procurement/suppliers', [ProcurementController::class, 'storeSupplier'])->name('pharmacy.suppliers.store');
+    Route::post('/pharmacy/procurement/purchase-orders', [ProcurementController::class, 'storePurchaseOrder'])->name('pharmacy.purchase_orders.store');
+    Route::post('/pharmacy/procurement/goods-receipt-notes', [ProcurementController::class, 'storeGoodsReceiptNote'])->name('pharmacy.goods_receipt_notes.store');
 });

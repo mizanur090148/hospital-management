@@ -12,6 +12,7 @@ use App\Core\Enums\BloodGroup;
 use App\Core\Enums\DepartmentType;
 use App\Core\Enums\DiagnosticPriority;
 use App\Core\Enums\DoctorStatus;
+use App\Core\Enums\DosageForm;
 use App\Core\Enums\EmergencyStatus;
 use App\Core\Enums\Gender;
 use App\Core\Enums\LabOrderStatus;
@@ -20,6 +21,7 @@ use App\Core\Enums\MarStatus;
 use App\Core\Enums\NursingShift;
 use App\Core\Enums\OtRoomStatus;
 use App\Core\Enums\PatientStatus;
+use App\Core\Enums\PoStatus;
 use App\Core\Enums\PrescriptionStatus;
 use App\Core\Enums\RadiologyModality;
 use App\Core\Enums\RadiologyOrderStatus;
@@ -29,6 +31,7 @@ use App\Core\Enums\TriageLevel;
 use App\Core\Enums\UserStatus;
 use App\Core\Enums\UserType;
 use App\Core\Enums\VisitStatus;
+use App\Core\Enums\WarehouseType;
 use App\Modules\Appointment\Models\Appointment;
 use App\Modules\Auth\Models\User;
 use App\Modules\Clinical\Models\Doctor;
@@ -55,6 +58,14 @@ use App\Modules\Opd\Models\PrescriptionItem;
 use App\Modules\OperationTheatre\Models\OperationTheatre;
 use App\Modules\OperationTheatre\Models\Surgery;
 use App\Modules\Patient\Models\Patient;
+use App\Modules\Pharmacy\Models\GoodsReceiptNote;
+use App\Modules\Pharmacy\Models\GoodsReceiptNoteItem;
+use App\Modules\Pharmacy\Models\Medicine;
+use App\Modules\Pharmacy\Models\MedicineBatch;
+use App\Modules\Pharmacy\Models\PurchaseOrder;
+use App\Modules\Pharmacy\Models\PurchaseOrderItem;
+use App\Modules\Pharmacy\Models\Supplier;
+use App\Modules\Pharmacy\Models\Warehouse;
 use App\Modules\RBAC\Models\Permission;
 use App\Modules\RBAC\Models\Role;
 use App\Modules\Tenancy\Models\Branch;
@@ -1006,6 +1017,249 @@ class DatabaseSeeder extends Seeder
                 ],
             ],
             'status' => SurgeryStatus::Scheduled,
+        ]);
+
+        // ==========================================
+        // 12. PHASE 6 SEEDING: PHARMACY & SUPPLY CHAIN
+        // ==========================================
+
+        // A. Seed Warehouses
+        $centralStore = Warehouse::firstOrCreate(['tenant_id' => $tenant->id, 'branch_id' => $mainBranch->id, 'code' => 'CENTRAL-STORE'], [
+            'id' => (string) Str::uuid(),
+            'name' => 'Central Pharmaceutical Depot & Warehouse',
+            'warehouse_type' => WarehouseType::Central->value,
+            'is_active' => true,
+        ]);
+
+        $opdPharmacy = Warehouse::firstOrCreate(['tenant_id' => $tenant->id, 'branch_id' => $mainBranch->id, 'code' => 'OPD-PHARM'], [
+            'id' => (string) Str::uuid(),
+            'name' => 'Main Outpatient Dispensing Counter',
+            'warehouse_type' => WarehouseType::Outpatient->value,
+            'is_active' => true,
+        ]);
+
+        $erPharmacy = Warehouse::firstOrCreate(['tenant_id' => $tenant->id, 'branch_id' => $mainBranch->id, 'code' => 'ER-STORE'], [
+            'id' => (string) Str::uuid(),
+            'name' => 'Emergency & Trauma Fast-Track Store',
+            'warehouse_type' => WarehouseType::EmergencyStore->value,
+            'is_active' => true,
+        ]);
+
+        // B. Seed Suppliers
+        $gskSupplier = Supplier::firstOrCreate(['tenant_id' => $tenant->id, 'name' => 'GlaxoSmithKline Healthcare Distribution'], [
+            'id' => (string) Str::uuid(),
+            'contact_person' => 'Marcus Holloway',
+            'email' => 'orders@gsk-pharma.test',
+            'phone' => '+1 (555) 882-9901',
+            'tax_number' => 'VAT-GSK-9901',
+            'address' => ['street' => '100 GSK Parkway, Research Triangle, NC'],
+            'is_active' => true,
+        ]);
+
+        $pfizerSupplier = Supplier::firstOrCreate(['tenant_id' => $tenant->id, 'name' => 'Pfizer Biopharmaceuticals Logistics'], [
+            'id' => (string) Str::uuid(),
+            'contact_person' => 'Deborah Vance',
+            'email' => 'logistics@pfizer-supply.test',
+            'phone' => '+1 (555) 882-9902',
+            'tax_number' => 'VAT-PFIZER-4482',
+            'address' => ['street' => '235 East 42nd St, New York, NY'],
+            'is_active' => true,
+        ]);
+
+        // C. Seed Medicines Master Catalog
+        $amoxicillin = Medicine::firstOrCreate(['tenant_id' => $tenant->id, 'code' => 'MED-AMOX-625'], [
+            'id' => (string) Str::uuid(),
+            'generic_name' => 'Amoxicillin + Clavulanic Acid',
+            'brand_name' => 'Augmentin 625mg',
+            'dosage_form' => DosageForm::Tablet->value,
+            'strength' => '625mg (500mg/125mg)',
+            'uom' => 'Strip',
+            'manufacturer' => 'GlaxoSmithKline',
+            'requires_prescription' => true,
+            'reorder_level' => 30,
+            'is_active' => true,
+        ]);
+
+        $paracetamol = Medicine::firstOrCreate(['tenant_id' => $tenant->id, 'code' => 'MED-PARA-500'], [
+            'id' => (string) Str::uuid(),
+            'generic_name' => 'Paracetamol (Acetaminophen)',
+            'brand_name' => 'Panadol Extra 500mg',
+            'dosage_form' => DosageForm::Tablet->value,
+            'strength' => '500mg',
+            'uom' => 'Strip',
+            'manufacturer' => 'GSK Consumer',
+            'requires_prescription' => false,
+            'reorder_level' => 100,
+            'is_active' => true,
+        ]);
+
+        $omeprazole = Medicine::firstOrCreate(['tenant_id' => $tenant->id, 'code' => 'MED-OMEP-20'], [
+            'id' => (string) Str::uuid(),
+            'generic_name' => 'Omeprazole Delayed-Release',
+            'brand_name' => 'Prilosec 20mg',
+            'dosage_form' => DosageForm::Capsule->value,
+            'strength' => '20mg',
+            'uom' => 'Strip',
+            'manufacturer' => 'AstraZeneca',
+            'requires_prescription' => false,
+            'reorder_level' => 40,
+            'is_active' => true,
+        ]);
+
+        $ceftriaxone = Medicine::firstOrCreate(['tenant_id' => $tenant->id, 'code' => 'MED-CEFT-1G'], [
+            'id' => (string) Str::uuid(),
+            'generic_name' => 'Ceftriaxone Sodium',
+            'brand_name' => 'Rocephin 1g IV/IM',
+            'dosage_form' => DosageForm::Injection->value,
+            'strength' => '1000mg',
+            'uom' => 'Vial',
+            'manufacturer' => 'Roche Pharmaceuticals',
+            'requires_prescription' => true,
+            'reorder_level' => 20,
+            'is_active' => true,
+        ]);
+
+        $salbutamol = Medicine::firstOrCreate(['tenant_id' => $tenant->id, 'code' => 'MED-SALB-100'], [
+            'id' => (string) Str::uuid(),
+            'generic_name' => 'Salbutamol Sulfate (Albuterol)',
+            'brand_name' => 'Ventolin HFA Inhaler',
+            'dosage_form' => DosageForm::Inhaler->value,
+            'strength' => '100mcg/actuation',
+            'uom' => 'Bottle',
+            'manufacturer' => 'GlaxoSmithKline',
+            'requires_prescription' => true,
+            'reorder_level' => 15,
+            'is_active' => true,
+        ]);
+
+        // D. Seed Batches with Staggered Expiry to showcase FEFO (First Expiring, First Out)
+        // Paracetamol Batch 1 (Near expiry: 45 days)
+        MedicineBatch::firstOrCreate([
+            'tenant_id' => $tenant->id,
+            'warehouse_id' => $opdPharmacy->id,
+            'medicine_id' => $paracetamol->id,
+            'batch_number' => 'B-PARA-2026A',
+        ], [
+            'id' => (string) Str::uuid(),
+            'expiry_date' => now()->addDays(45)->toDateString(),
+            'purchase_cost' => 1.20,
+            'selling_price' => 2.50,
+            'quantity_on_hand' => 50,
+            'quantity_reserved' => 0,
+        ]);
+
+        // Paracetamol Batch 2 (Far expiry: 365 days)
+        MedicineBatch::firstOrCreate([
+            'tenant_id' => $tenant->id,
+            'warehouse_id' => $opdPharmacy->id,
+            'medicine_id' => $paracetamol->id,
+            'batch_number' => 'B-PARA-2026B',
+        ], [
+            'id' => (string) Str::uuid(),
+            'expiry_date' => now()->addDays(365)->toDateString(),
+            'purchase_cost' => 1.30,
+            'selling_price' => 2.50,
+            'quantity_on_hand' => 200,
+            'quantity_reserved' => 0,
+        ]);
+
+        // Amoxicillin Batches
+        MedicineBatch::firstOrCreate([
+            'tenant_id' => $tenant->id,
+            'warehouse_id' => $opdPharmacy->id,
+            'medicine_id' => $amoxicillin->id,
+            'batch_number' => 'B-AMOX-8819',
+        ], [
+            'id' => (string) Str::uuid(),
+            'expiry_date' => now()->addDays(90)->toDateString(),
+            'purchase_cost' => 8.50,
+            'selling_price' => 14.00,
+            'quantity_on_hand' => 80,
+            'quantity_reserved' => 0,
+        ]);
+
+        // Ceftriaxone Vials in Central Store
+        MedicineBatch::firstOrCreate([
+            'tenant_id' => $tenant->id,
+            'warehouse_id' => $centralStore->id,
+            'medicine_id' => $ceftriaxone->id,
+            'batch_number' => 'B-CEFT-5510',
+        ], [
+            'id' => (string) Str::uuid(),
+            'expiry_date' => now()->addDays(180)->toDateString(),
+            'purchase_cost' => 15.00,
+            'selling_price' => 28.00,
+            'quantity_on_hand' => 120,
+            'quantity_reserved' => 0,
+        ]);
+
+        // E. Seed a Purchase Order & Goods Receipt Note (GRN)
+        $po1 = PurchaseOrder::firstOrCreate([
+            'tenant_id' => $tenant->id,
+            'po_number' => 'PO-2026-000001',
+        ], [
+            'id' => (string) Str::uuid(),
+            'branch_id' => $mainBranch->id,
+            'warehouse_id' => $centralStore->id,
+            'supplier_id' => $gskSupplier->id,
+            'order_date' => now()->subDays(5)->toDateString(),
+            'expected_delivery_date' => now()->addDays(2)->toDateString(),
+            'total_amount' => 1150.00,
+            'status' => PoStatus::Received,
+            'notes' => 'Bulk seasonal antibiotic and antipyretic restocking',
+        ]);
+
+        PurchaseOrderItem::firstOrCreate([
+            'tenant_id' => $tenant->id,
+            'purchase_order_id' => $po1->id,
+            'medicine_id' => $amoxicillin->id,
+        ], [
+            'id' => (string) Str::uuid(),
+            'quantity_ordered' => 100,
+            'quantity_received' => 100,
+            'unit_cost' => 8.50,
+            'total_cost' => 850.00,
+        ]);
+
+        PurchaseOrderItem::firstOrCreate([
+            'tenant_id' => $tenant->id,
+            'purchase_order_id' => $po1->id,
+            'medicine_id' => $paracetamol->id,
+        ], [
+            'id' => (string) Str::uuid(),
+            'quantity_ordered' => 250,
+            'quantity_received' => 250,
+            'unit_cost' => 1.20,
+            'total_cost' => 300.00,
+        ]);
+
+        // Goods Receipt Note (GRN)
+        $grn1 = GoodsReceiptNote::firstOrCreate([
+            'tenant_id' => $tenant->id,
+            'grn_number' => 'GRN-2026-000001',
+        ], [
+            'id' => (string) Str::uuid(),
+            'branch_id' => $mainBranch->id,
+            'warehouse_id' => $centralStore->id,
+            'purchase_order_id' => $po1->id,
+            'supplier_id' => $gskSupplier->id,
+            'received_date' => now()->subDays(2)->toDateString(),
+            'invoice_number' => 'GSK-INV-9921',
+            'received_by_user_id' => $pharmacistUser->id,
+            'notes' => 'Delivered in good condition with cold chain logs intact.',
+        ]);
+
+        GoodsReceiptNoteItem::firstOrCreate([
+            'tenant_id' => $tenant->id,
+            'goods_receipt_note_id' => $grn1->id,
+            'batch_number' => 'B-AMOX-8819',
+        ], [
+            'id' => (string) Str::uuid(),
+            'medicine_id' => $amoxicillin->id,
+            'expiry_date' => now()->addDays(90)->toDateString(),
+            'quantity_received' => 80,
+            'unit_cost' => 8.50,
+            'selling_price' => 14.00,
         ]);
     }
 }

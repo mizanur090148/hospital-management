@@ -12,6 +12,9 @@ use App\Modules\Opd\Models\OpdVisit;
 use App\Modules\Opd\Models\Prescription;
 use App\Modules\OperationTheatre\Models\Surgery;
 use App\Modules\Patient\Models\Patient;
+use App\Modules\Pharmacy\Models\GoodsReceiptNote;
+use App\Modules\Pharmacy\Models\PharmacyDispensing;
+use App\Modules\Pharmacy\Models\PurchaseOrder;
 
 class SequenceGenerator
 {
@@ -226,6 +229,72 @@ class SequenceGenerator
             ->where('surgery_number', 'like', "{$prefix}%")
             ->orderByDesc('surgery_number')
             ->value('surgery_number');
+
+        $nextNumber = 1;
+        if ($latest && preg_match('/-(\d+)$/', $latest, $matches)) {
+            $nextNumber = ((int) $matches[1]) + 1;
+        }
+
+        return sprintf('%s%06d', $prefix, $nextNumber);
+    }
+
+    /**
+     * Generate sequential Purchase Order Number: PO-YYYY-000001
+     */
+    public static function generatePoNumber(string $tenantId): string
+    {
+        $year = date('Y');
+        $prefix = "PO-{$year}-";
+
+        $latest = PurchaseOrder::withoutGlobalScopes()
+            ->where('tenant_id', $tenantId)
+            ->where('po_number', 'like', "{$prefix}%")
+            ->orderByDesc('po_number')
+            ->value('po_number');
+
+        $nextNumber = 1;
+        if ($latest && preg_match('/-(\d+)$/', $latest, $matches)) {
+            $nextNumber = ((int) $matches[1]) + 1;
+        }
+
+        return sprintf('%s%06d', $prefix, $nextNumber);
+    }
+
+    /**
+     * Generate sequential Goods Receipt Note Number: GRN-YYYY-000001
+     */
+    public static function generateGrnNumber(string $tenantId): string
+    {
+        $year = date('Y');
+        $prefix = "GRN-{$year}-";
+
+        $latest = GoodsReceiptNote::withoutGlobalScopes()
+            ->where('tenant_id', $tenantId)
+            ->where('grn_number', 'like', "{$prefix}%")
+            ->orderByDesc('grn_number')
+            ->value('grn_number');
+
+        $nextNumber = 1;
+        if ($latest && preg_match('/-(\d+)$/', $latest, $matches)) {
+            $nextNumber = ((int) $matches[1]) + 1;
+        }
+
+        return sprintf('%s%06d', $prefix, $nextNumber);
+    }
+
+    /**
+     * Generate sequential Pharmacy Dispense Receipt Number: DSP-YYYY-000001
+     */
+    public static function generateDispenseNumber(string $tenantId): string
+    {
+        $year = date('Y');
+        $prefix = "DSP-{$year}-";
+
+        $latest = PharmacyDispensing::withoutGlobalScopes()
+            ->where('tenant_id', $tenantId)
+            ->where('dispense_number', 'like', "{$prefix}%")
+            ->orderByDesc('dispense_number')
+            ->value('dispense_number');
 
         $nextNumber = 1;
         if ($latest && preg_match('/-(\d+)$/', $latest, $matches)) {
