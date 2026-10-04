@@ -5,7 +5,7 @@ namespace App\Modules\Pharmacy\Models;
 use App\Core\Audit\Traits\HasAuditTrail;
 use App\Core\Enums\PoStatus;
 use App\Core\Tenancy\Traits\BelongsToTenant;
-use App\Modules\Branch\Models\Branch;
+use App\Modules\Tenancy\Models\Branch;
 use App\Modules\Tenancy\Models\Tenant;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
