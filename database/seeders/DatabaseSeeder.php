@@ -4,18 +4,26 @@ namespace Database\Seeders;
 
 use App\Core\Enums\AdmissionStatus;
 use App\Core\Enums\AdmissionType;
+use App\Core\Enums\AnesthesiaType;
 use App\Core\Enums\AppointmentStatus;
 use App\Core\Enums\AppointmentType;
 use App\Core\Enums\BedStatus;
 use App\Core\Enums\BloodGroup;
 use App\Core\Enums\DepartmentType;
+use App\Core\Enums\DiagnosticPriority;
 use App\Core\Enums\DoctorStatus;
 use App\Core\Enums\EmergencyStatus;
 use App\Core\Enums\Gender;
+use App\Core\Enums\LabOrderStatus;
+use App\Core\Enums\LabSampleStatus;
 use App\Core\Enums\MarStatus;
 use App\Core\Enums\NursingShift;
+use App\Core\Enums\OtRoomStatus;
 use App\Core\Enums\PatientStatus;
 use App\Core\Enums\PrescriptionStatus;
+use App\Core\Enums\RadiologyModality;
+use App\Core\Enums\RadiologyOrderStatus;
+use App\Core\Enums\SurgeryStatus;
 use App\Core\Enums\TenantStatus;
 use App\Core\Enums\TriageLevel;
 use App\Core\Enums\UserStatus;
@@ -25,6 +33,13 @@ use App\Modules\Appointment\Models\Appointment;
 use App\Modules\Auth\Models\User;
 use App\Modules\Clinical\Models\Doctor;
 use App\Modules\Clinical\Models\DoctorSchedule;
+use App\Modules\Diagnostics\Models\LabOrder;
+use App\Modules\Diagnostics\Models\LabOrderItem;
+use App\Modules\Diagnostics\Models\LabResult;
+use App\Modules\Diagnostics\Models\LabSample;
+use App\Modules\Diagnostics\Models\LabTestTemplate;
+use App\Modules\Diagnostics\Models\RadiologyOrder;
+use App\Modules\Diagnostics\Models\RadiologyTemplate;
 use App\Modules\Emergency\Models\EmergencyAdmission;
 use App\Modules\Facility\Models\Bed;
 use App\Modules\Facility\Models\Department;
@@ -37,6 +52,8 @@ use App\Modules\Nursing\Models\NursingNote;
 use App\Modules\Opd\Models\OpdVisit;
 use App\Modules\Opd\Models\Prescription;
 use App\Modules\Opd\Models\PrescriptionItem;
+use App\Modules\OperationTheatre\Models\OperationTheatre;
+use App\Modules\OperationTheatre\Models\Surgery;
 use App\Modules\Patient\Models\Patient;
 use App\Modules\RBAC\Models\Permission;
 use App\Modules\RBAC\Models\Role;
@@ -756,6 +773,239 @@ class DatabaseSeeder extends Seeder
             'assigned_doctor_id' => $doctorVance->id,
             'status' => EmergencyStatus::InTreatment,
             'admitted_at' => now()->subMinutes(45),
+        ]);
+
+        // ==========================================
+        // 11. PHASE 5 SEEDING: DIAGNOSTICS & OT
+        // ==========================================
+
+        // A. Seed Laboratory Test Templates
+        $cbcTemplate = LabTestTemplate::firstOrCreate(['tenant_id' => $tenant->id, 'code' => 'CBC-DIFF'], [
+            'id' => (string) Str::uuid(),
+            'name' => 'Complete Blood Count with 5-Part Differential (CBC)',
+            'category' => 'Hematology',
+            'sample_type' => 'Whole Blood (EDTA)',
+            'price' => 45.00,
+            'turnaround_time_hours' => 4,
+            'reference_ranges' => [
+                ['parameter' => 'Hemoglobin', 'range' => '13.5 - 17.5', 'unit' => 'g/dL', 'gender' => 'MALE'],
+                ['parameter' => 'White Blood Cell (WBC)', 'range' => '4.5 - 11.0', 'unit' => 'x10^3/uL'],
+                ['parameter' => 'Platelet Count', 'range' => '150 - 450', 'unit' => 'x10^3/uL'],
+                ['parameter' => 'Hematocrit (Hct)', 'range' => '41.0 - 50.0', 'unit' => '%'],
+            ],
+            'is_active' => true,
+        ]);
+
+        $cmpTemplate = LabTestTemplate::firstOrCreate(['tenant_id' => $tenant->id, 'code' => 'CMP-METAB'], [
+            'id' => (string) Str::uuid(),
+            'name' => 'Comprehensive Metabolic Panel (CMP)',
+            'category' => 'Biochemistry',
+            'sample_type' => 'Serum (SST Gold)',
+            'price' => 65.00,
+            'turnaround_time_hours' => 6,
+            'reference_ranges' => [
+                ['parameter' => 'Fasting Blood Glucose', 'range' => '70 - 99', 'unit' => 'mg/dL'],
+                ['parameter' => 'Serum Creatinine', 'range' => '0.7 - 1.3', 'unit' => 'mg/dL'],
+                ['parameter' => 'Blood Urea Nitrogen (BUN)', 'range' => '7 - 20', 'unit' => 'mg/dL'],
+                ['parameter' => 'Serum Potassium (K+)', 'range' => '3.5 - 5.0', 'unit' => 'mEq/L'],
+            ],
+            'is_active' => true,
+        ]);
+
+        $lipidTemplate = LabTestTemplate::firstOrCreate(['tenant_id' => $tenant->id, 'code' => 'LIPID-FULL'], [
+            'id' => (string) Str::uuid(),
+            'name' => 'Fasting Lipid Profile with Calculated LDL',
+            'category' => 'Biochemistry',
+            'sample_type' => 'Serum (SST Gold)',
+            'price' => 50.00,
+            'turnaround_time_hours' => 6,
+            'reference_ranges' => [
+                ['parameter' => 'Total Cholesterol', 'range' => '< 200', 'unit' => 'mg/dL'],
+                ['parameter' => 'HDL Cholesterol', 'range' => '> 40', 'unit' => 'mg/dL'],
+                ['parameter' => 'LDL Cholesterol', 'range' => '< 100', 'unit' => 'mg/dL'],
+                ['parameter' => 'Serum Triglycerides', 'range' => '< 150', 'unit' => 'mg/dL'],
+            ],
+            'is_active' => true,
+        ]);
+
+        // Seed an Active Lab Order for Patient 1 with items and sample
+        $labOrder1 = LabOrder::firstOrCreate([
+            'tenant_id' => $tenant->id,
+            'order_number' => 'LAB-2026-000001',
+        ], [
+            'id' => (string) Str::uuid(),
+            'branch_id' => $mainBranch->id,
+            'patient_id' => $patient1->id,
+            'ordering_doctor_id' => $doctorVance->id,
+            'encounter_type' => 'OPD',
+            'priority' => DiagnosticPriority::Urgent,
+            'clinical_notes' => 'Evaluation of exertional dyspnea and hypertension surveillance',
+            'status' => LabOrderStatus::InAnalysis,
+            'ordered_at' => now()->subHours(3),
+        ]);
+
+        $labItem1 = LabOrderItem::firstOrCreate([
+            'tenant_id' => $tenant->id,
+            'lab_order_id' => $labOrder1->id,
+            'template_id' => $cbcTemplate->id,
+        ], [
+            'id' => (string) Str::uuid(),
+            'test_name' => $cbcTemplate->name,
+            'price' => $cbcTemplate->price,
+            'status' => 'IN_ANALYSIS',
+        ]);
+
+        $sample1 = LabSample::firstOrCreate([
+            'tenant_id' => $tenant->id,
+            'lab_order_id' => $labOrder1->id,
+            'sample_barcode' => 'SMP-2026-000001',
+        ], [
+            'id' => (string) Str::uuid(),
+            'sample_type' => 'Whole Blood (EDTA)',
+            'collected_by_user_id' => $nurseUser->id,
+            'collected_at' => now()->subHours(2),
+            'status' => LabSampleStatus::Collected,
+        ]);
+
+        // Results for Lab Item 1
+        LabResult::firstOrCreate([
+            'tenant_id' => $tenant->id,
+            'lab_order_item_id' => $labItem1->id,
+            'parameter_name' => 'Hemoglobin',
+        ], [
+            'id' => (string) Str::uuid(),
+            'observed_value' => '14.8',
+            'reference_range' => '13.5 - 17.5',
+            'unit' => 'g/dL',
+            'is_abnormal' => false,
+            'critical_flag' => false,
+            'status' => 'DRAFT',
+        ]);
+
+        LabResult::firstOrCreate([
+            'tenant_id' => $tenant->id,
+            'lab_order_item_id' => $labItem1->id,
+            'parameter_name' => 'White Blood Cell (WBC)',
+        ], [
+            'id' => (string) Str::uuid(),
+            'observed_value' => '11.8',
+            'reference_range' => '4.5 - 11.0',
+            'unit' => 'x10^3/uL',
+            'is_abnormal' => true,
+            'critical_flag' => false,
+            'pathologist_notes' => 'Mild neutrophilic leukocytosis noted.',
+            'status' => 'DRAFT',
+        ]);
+
+        // B. Seed Radiology Master Templates
+        $cxrTemplate = RadiologyTemplate::firstOrCreate(['tenant_id' => $tenant->id, 'code' => 'RAD-CXR-PA'], [
+            'id' => (string) Str::uuid(),
+            'name' => 'Digital Chest Radiography (X-Ray) PA & Lateral Views',
+            'modality' => RadiologyModality::XRay,
+            'body_part' => 'Thorax / Chest',
+            'price' => 120.00,
+            'instructions' => 'Patient standing upright with deep inspiratory hold.',
+            'is_active' => true,
+        ]);
+
+        $mriTemplate = RadiologyTemplate::firstOrCreate(['tenant_id' => $tenant->id, 'code' => 'RAD-MRI-BRAIN'], [
+            'id' => (string) Str::uuid(),
+            'name' => 'Magnetic Resonance Imaging (MRI) Brain with Diffusion/FLAIR',
+            'modality' => RadiologyModality::Mri,
+            'body_part' => 'Head & Brain',
+            'price' => 680.00,
+            'instructions' => 'Screen for metallic implants and pacemaker before entering magnet zone.',
+            'is_active' => true,
+        ]);
+
+        $usgTemplate = RadiologyTemplate::firstOrCreate(['tenant_id' => $tenant->id, 'code' => 'RAD-USG-ABDO'], [
+            'id' => (string) Str::uuid(),
+            'name' => 'Complete Abdominal & Pelvic Ultrasonography (USG)',
+            'modality' => RadiologyModality::Ultrasound,
+            'body_part' => 'Abdomen & Pelvis',
+            'price' => 190.00,
+            'instructions' => '6 hours overnight fasting required. Full bladder for pelvic examination.',
+            'is_active' => true,
+        ]);
+
+        // Seed a Verified Radiology Order for Patient 1
+        RadiologyOrder::firstOrCreate([
+            'tenant_id' => $tenant->id,
+            'order_number' => 'RAD-2026-000001',
+        ], [
+            'id' => (string) Str::uuid(),
+            'branch_id' => $mainBranch->id,
+            'patient_id' => $patient1->id,
+            'ordering_doctor_id' => $doctorVance->id,
+            'template_id' => $cxrTemplate->id,
+            'priority' => DiagnosticPriority::Routine,
+            'clinical_indication' => 'Chronic cough and exertional dyspnea. Rule out cardiomegaly and consolidation.',
+            'findings' => 'Normal cardiac silhouette and mediastinal contours. Clear bilateral lung fields without focal infiltrates, effusion, or pneumothorax. Diaphragmatic domes sharp and smooth.',
+            'impression' => 'No acute cardiopulmonary disease. Normal posteroanterior chest radiography.',
+            'radiologist_notes' => 'Compared with historical baseline.',
+            'dicom_study_uid' => '1.2.840.113619.2.55.992817263',
+            'reporting_doctor_id' => $doctorVance->id,
+            'status' => RadiologyOrderStatus::Verified,
+            'ordered_at' => now()->subDay(),
+            'verified_at' => now()->subHours(6),
+        ]);
+
+        // C. Seed Operation Theatres
+        $otSuiteAlpha = OperationTheatre::firstOrCreate(['tenant_id' => $tenant->id, 'branch_id' => $mainBranch->id, 'code' => 'OT-1'], [
+            'id' => (string) Str::uuid(),
+            'name' => 'Main Surgical Suite Alpha',
+            'theatre_type' => 'Major OT',
+            'floor' => '4th Floor - Surgical Wing',
+            'status' => OtRoomStatus::Available,
+            'is_active' => true,
+        ]);
+
+        $otSuiteCardiac = OperationTheatre::firstOrCreate(['tenant_id' => $tenant->id, 'branch_id' => $mainBranch->id, 'code' => 'OT-CARD'], [
+            'id' => (string) Str::uuid(),
+            'name' => 'Cardiovascular Surgical Suite Beta',
+            'theatre_type' => 'Cardiac OT',
+            'floor' => '4th Floor - Surgical Wing',
+            'status' => OtRoomStatus::Available,
+            'is_active' => true,
+        ]);
+
+        // Seed a Surgery with WHO Surgical Safety Checklist for Patient 3
+        Surgery::firstOrCreate([
+            'tenant_id' => $tenant->id,
+            'surgery_number' => 'SUR-2026-000001',
+        ], [
+            'id' => (string) Str::uuid(),
+            'branch_id' => $mainBranch->id,
+            'patient_id' => $patient3->id,
+            'primary_surgeon_id' => $doctorVance->id,
+            'operation_theatre_id' => $otSuiteCardiac->id,
+            'procedure_name' => 'Coronary Angiography and Drug-Eluting Stent Placement',
+            'anesthesia_type' => AnesthesiaType::Local,
+            'scheduled_date' => date('Y-m-d'),
+            'scheduled_start_time' => '10:00',
+            'scheduled_end_time' => '12:00',
+            'pre_op_diagnosis' => 'Severe 3-vessel coronary artery disease with unstable angina',
+            'safety_checklist' => [
+                'sign_in' => [
+                    'patient_identity_confirmed' => true,
+                    'site_marked' => true,
+                    'anesthesia_machine_checked' => true,
+                    'pulse_oximeter_functioning' => true,
+                    'allergy_assessed' => true,
+                ],
+                'time_out' => [
+                    'all_team_members_introduced' => true,
+                    'patient_name_and_procedure_verified' => true,
+                    'antibiotic_prophylaxis_given_60min' => true,
+                    'essential_imaging_displayed' => true,
+                ],
+                'sign_out' => [
+                    'nurse_confirms_procedure_name' => true,
+                    'instruments_sponges_needles_counted' => true,
+                    'specimen_labeled_correctly' => true,
+                ],
+            ],
+            'status' => SurgeryStatus::Scheduled,
         ]);
     }
 }

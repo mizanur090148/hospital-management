@@ -3,7 +3,7 @@ import { Link, usePage, router } from '@inertiajs/react';
 import {
     Activity, Building2, ChevronDown, LogOut,
     LayoutDashboard, Users, Calendar, Stethoscope,
-    BedDouble, Siren, Pill, FlaskConical,
+    BedDouble, Siren, Pill, FlaskConical, ScanLine, Scissors,
     Receipt, Shield, Menu, X, Check,
     Building
 } from 'lucide-react';
@@ -38,14 +38,17 @@ export const AppLayout: React.FC<{ children: React.ReactNode; title?: string }> 
         { label: 'IPD & Inpatient Care', href: '/ipd', icon: BedDouble, current: route().current('admissions.*') },
         { label: 'Emergency & Triage', href: '/emergency', icon: Siren, current: route().current('emergency.*'), badge: 'ESI 1-5' },
         { label: 'Nursing Station & MAR', href: '/nursing', icon: Activity, current: route().current('nursing.*') },
-        { header: 'Diagnostics & Pharmacy' },
+        { header: 'Diagnostics & Surgery' },
+        { label: 'Laboratory Services', href: '/laboratory', icon: FlaskConical, current: route().current('laboratory.*') },
+        { label: 'Radiology & DICOM', href: '/radiology', icon: ScanLine, current: route().current('radiology.*'), badge: 'PACS' },
+        { label: 'Operation Theatre (OT)', href: '/operation-theatres', icon: Scissors, current: route().current('operation_theatres.*') },
+        { header: 'Pharmacy & Billing' },
         { label: 'Pharmacy & FEFO Stock', href: '#', icon: Pill, badge: 'Phase 6', disabled: true },
-        { label: 'Laboratory Services', href: '#', icon: FlaskConical, badge: 'Phase 5', disabled: true },
+        { label: 'Billing & Invoicing', href: '#', icon: Receipt, badge: 'Phase 7', disabled: true },
         { header: 'Hospital & Governance' },
         { label: 'Facility, Wards & Beds', href: '/facility', icon: Building, current: route().current('facility.*') },
         { label: 'Staff Directory', href: '/users', icon: Users, current: route().current('users.*') },
         { label: 'Roles & RBAC', href: '/roles', icon: Shield, current: route().current('roles.*') },
-        { label: 'Billing & Invoicing', href: '#', icon: Receipt, badge: 'Phase 7', disabled: true },
     ];
 
     return (

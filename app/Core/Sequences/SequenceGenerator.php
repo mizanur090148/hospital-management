@@ -3,10 +3,14 @@
 namespace App\Core\Sequences;
 
 use App\Modules\Appointment\Models\Appointment;
+use App\Modules\Diagnostics\Models\LabOrder;
+use App\Modules\Diagnostics\Models\LabSample;
+use App\Modules\Diagnostics\Models\RadiologyOrder;
 use App\Modules\Emergency\Models\EmergencyAdmission;
 use App\Modules\IPD\Models\Admission;
 use App\Modules\Opd\Models\OpdVisit;
 use App\Modules\Opd\Models\Prescription;
+use App\Modules\OperationTheatre\Models\Surgery;
 use App\Modules\Patient\Models\Patient;
 
 class SequenceGenerator
@@ -134,6 +138,94 @@ class SequenceGenerator
             ->where('er_number', 'like', "{$prefix}%")
             ->orderByDesc('er_number')
             ->value('er_number');
+
+        $nextNumber = 1;
+        if ($latest && preg_match('/-(\d+)$/', $latest, $matches)) {
+            $nextNumber = ((int) $matches[1]) + 1;
+        }
+
+        return sprintf('%s%06d', $prefix, $nextNumber);
+    }
+
+    /**
+     * Generate sequential Lab Order Number: LAB-YYYY-000001
+     */
+    public static function generateLabOrderNumber(string $tenantId): string
+    {
+        $year = date('Y');
+        $prefix = "LAB-{$year}-";
+
+        $latest = LabOrder::withoutGlobalScopes()
+            ->where('tenant_id', $tenantId)
+            ->where('order_number', 'like', "{$prefix}%")
+            ->orderByDesc('order_number')
+            ->value('order_number');
+
+        $nextNumber = 1;
+        if ($latest && preg_match('/-(\d+)$/', $latest, $matches)) {
+            $nextNumber = ((int) $matches[1]) + 1;
+        }
+
+        return sprintf('%s%06d', $prefix, $nextNumber);
+    }
+
+    /**
+     * Generate sequential Sample Barcode: SMP-YYYY-000001
+     */
+    public static function generateSampleBarcode(string $tenantId): string
+    {
+        $year = date('Y');
+        $prefix = "SMP-{$year}-";
+
+        $latest = LabSample::withoutGlobalScopes()
+            ->where('tenant_id', $tenantId)
+            ->where('sample_barcode', 'like', "{$prefix}%")
+            ->orderByDesc('sample_barcode')
+            ->value('sample_barcode');
+
+        $nextNumber = 1;
+        if ($latest && preg_match('/-(\d+)$/', $latest, $matches)) {
+            $nextNumber = ((int) $matches[1]) + 1;
+        }
+
+        return sprintf('%s%06d', $prefix, $nextNumber);
+    }
+
+    /**
+     * Generate sequential Radiology Order Number: RAD-YYYY-000001
+     */
+    public static function generateRadiologyOrderNumber(string $tenantId): string
+    {
+        $year = date('Y');
+        $prefix = "RAD-{$year}-";
+
+        $latest = RadiologyOrder::withoutGlobalScopes()
+            ->where('tenant_id', $tenantId)
+            ->where('order_number', 'like', "{$prefix}%")
+            ->orderByDesc('order_number')
+            ->value('order_number');
+
+        $nextNumber = 1;
+        if ($latest && preg_match('/-(\d+)$/', $latest, $matches)) {
+            $nextNumber = ((int) $matches[1]) + 1;
+        }
+
+        return sprintf('%s%06d', $prefix, $nextNumber);
+    }
+
+    /**
+     * Generate sequential Surgery Number: SUR-YYYY-000001
+     */
+    public static function generateSurgeryNumber(string $tenantId): string
+    {
+        $year = date('Y');
+        $prefix = "SUR-{$year}-";
+
+        $latest = Surgery::withoutGlobalScopes()
+            ->where('tenant_id', $tenantId)
+            ->where('surgery_number', 'like', "{$prefix}%")
+            ->orderByDesc('surgery_number')
+            ->value('surgery_number');
 
         $nextNumber = 1;
         if ($latest && preg_match('/-(\d+)$/', $latest, $matches)) {

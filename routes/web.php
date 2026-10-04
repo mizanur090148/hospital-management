@@ -6,12 +6,15 @@ use App\Modules\Auth\Http\Controllers\TenantOnboardingController;
 use App\Modules\Auth\Http\Controllers\UserController;
 use App\Modules\Clinical\Http\Controllers\DoctorController;
 use App\Modules\Dashboard\Http\Controllers\DashboardController;
+use App\Modules\Diagnostics\Http\Controllers\LaboratoryController;
+use App\Modules\Diagnostics\Http\Controllers\RadiologyController;
 use App\Modules\Emergency\Http\Controllers\EmergencyController;
 use App\Modules\Facility\Http\Controllers\FacilityController;
 use App\Modules\IPD\Http\Controllers\AdmissionController;
 use App\Modules\Nursing\Http\Controllers\NursingController;
 use App\Modules\Opd\Http\Controllers\OpdVisitController;
 use App\Modules\Opd\Http\Controllers\PrescriptionController;
+use App\Modules\OperationTheatre\Http\Controllers\OperationTheatreController;
 use App\Modules\Patient\Http\Controllers\PatientController;
 use App\Modules\RBAC\Http\Controllers\RoleController;
 use App\Modules\Tenancy\Models\Branch;
@@ -123,4 +126,25 @@ Route::middleware('auth')->group(function () {
     Route::get('/nursing', [NursingController::class, 'index'])->name('nursing.index');
     Route::post('/nursing/{admission}/notes', [NursingController::class, 'storeNote'])->name('nursing.notes.store');
     Route::post('/nursing/{admission}/mar', [NursingController::class, 'recordMar'])->name('nursing.mar.record');
+
+    // Phase 5: Laboratory Diagnostics
+    Route::get('/laboratory', [LaboratoryController::class, 'index'])->name('laboratory.index');
+    Route::post('/laboratory/orders', [LaboratoryController::class, 'storeOrder'])->name('laboratory.orders.store');
+    Route::post('/laboratory/samples/{sample}/collect', [LaboratoryController::class, 'collectSample'])->name('laboratory.samples.collect');
+    Route::post('/laboratory/items/{item}/results', [LaboratoryController::class, 'enterResults'])->name('laboratory.results.store');
+    Route::post('/laboratory/orders/{order}/verify', [LaboratoryController::class, 'verifyResults'])->name('laboratory.orders.verify');
+
+    // Phase 5: Radiology & DICOM Imaging
+    Route::get('/radiology', [RadiologyController::class, 'index'])->name('radiology.index');
+    Route::post('/radiology/orders', [RadiologyController::class, 'storeOrder'])->name('radiology.orders.store');
+    Route::post('/radiology/orders/{order}/capture', [RadiologyController::class, 'captureScan'])->name('radiology.orders.capture');
+    Route::post('/radiology/orders/{order}/report', [RadiologyController::class, 'reportOrder'])->name('radiology.orders.report');
+    Route::post('/radiology/orders/{order}/verify', [RadiologyController::class, 'verifyReport'])->name('radiology.orders.verify');
+
+    // Phase 5: Operation Theatre (OT) Scheduling & WHO Surgical Safety Checklist
+    Route::get('/operation-theatres', [OperationTheatreController::class, 'index'])->name('operation_theatres.index');
+    Route::post('/operation-theatres', [OperationTheatreController::class, 'storeTheatre'])->name('operation_theatres.store');
+    Route::post('/operation-theatres/surgeries', [OperationTheatreController::class, 'scheduleSurgery'])->name('operation_theatres.surgeries.schedule');
+    Route::patch('/operation-theatres/surgeries/{surgery}/status', [OperationTheatreController::class, 'updateStatus'])->name('operation_theatres.surgeries.status');
+    Route::post('/operation-theatres/surgeries/{surgery}/checklist', [OperationTheatreController::class, 'saveChecklist'])->name('operation_theatres.surgeries.checklist');
 });
