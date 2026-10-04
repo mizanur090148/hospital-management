@@ -49,9 +49,14 @@ interface AdmissionDossierProps {
                 daily_rate: string;
                 room: {
                     room_number: string;
+                    room_type: string;
                     ward: {
                         name: string;
                         code: string;
+                        floor: string | null;
+                        branch?: {
+                            name: string;
+                        };
                     };
                 };
             };
@@ -67,8 +72,13 @@ interface AdmissionDossierProps {
                 bed_type: string;
                 room: {
                     room_number: string;
+                    room_type: string;
                     ward: {
                         name: string;
+                        floor: string | null;
+                        branch?: {
+                            name: string;
+                        };
                     };
                 };
             };
@@ -104,8 +114,14 @@ interface AdmissionDossierProps {
         daily_rate: string;
         room: {
             room_number: string;
+            room_type: string;
             ward: {
                 name: string;
+                code?: string;
+                floor: string | null;
+                branch?: {
+                    name: string;
+                };
             };
         };
     }>;
@@ -116,6 +132,20 @@ export default function IPDShow({ admission, availableBeds, dispositionOptions }
     const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
     const [isDischargeModalOpen, setIsDischargeModalOpen] = useState(false);
     const [activeTab, setActiveTab] = useState<'overview' | 'nursing' | 'mar'>('overview');
+
+    const getCabinBadge = (type?: string) => {
+        switch (type) {
+            case 'cabin_vip': return { label: 'VIP Suite', color: 'bg-amber-50 text-amber-800 border-amber-300' };
+            case 'cabin_deluxe': return { label: 'Deluxe Cabin', color: 'bg-purple-50 text-purple-800 border-purple-300' };
+            case 'cabin_single': return { label: 'Single Cabin', color: 'bg-cyan-50 text-cyan-800 border-cyan-300' };
+            case 'cabin_twin': return { label: 'Twin Cabin', color: 'bg-blue-50 text-blue-800 border-blue-300' };
+            case 'cabin_non_ac': return { label: 'Non-AC Cabin', color: 'bg-slate-100 text-slate-700 border-slate-300' };
+            case 'icu': return { label: 'ICU Bay', color: 'bg-rose-50 text-rose-800 border-rose-300' };
+            case 'isolation': return { label: 'Isolation', color: 'bg-orange-50 text-orange-800 border-orange-300' };
+            case 'general_ward': return { label: 'General Ward', color: 'bg-emerald-50 text-emerald-800 border-emerald-300' };
+            default: return { label: (type || 'Standard').replace('_', ' '), color: 'bg-slate-100 text-slate-700 border-slate-200' };
+        }
+    };
 
     // Transfer Bed Form
     const transferForm = useForm({
@@ -219,12 +249,25 @@ export default function IPDShow({ admission, availableBeds, dispositionOptions }
                                     <BedDouble className="w-5 h-5" />
                                 </div>
                                 <div>
-                                    <div className="text-[10px] uppercase font-bold text-teal-300">Current Assigned Bed</div>
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-[10px] uppercase font-bold text-teal-300">Current Assigned Bed</span>
+                                        <span className="text-[9px] px-1.5 py-0.2 rounded-full font-bold bg-teal-400/20 text-teal-200 border border-teal-300/30">
+                                            {getCabinBadge(admission.currentBedAssignment.bed.room.room_type).label}
+                                        </span>
+                                    </div>
                                     <div className="font-extrabold text-base text-white">
-                                        {admission.currentBedAssignment.bed.bed_number}
+                                        Bed {admission.currentBedAssignment.bed.bed_number}
+                                        <span className="text-xs font-normal text-teal-200 ml-2">
+                                            ({admission.currentBedAssignment.bed.room.room_number})
+                                        </span>
                                     </div>
                                     <div className="text-xs text-slate-300">
-                                        {admission.currentBedAssignment.bed.room.ward.name} (Room {admission.currentBedAssignment.bed.room.room_number})
+                                        {admission.currentBedAssignment.bed.room.ward.name}
+                                        {admission.currentBedAssignment.bed.room.ward.floor && ` • Floor ${admission.currentBedAssignment.bed.room.ward.floor}`}
+                                        {' • '}
+                                        <span className="text-teal-200">
+                                            {admission.currentBedAssignment.bed.room.ward.branch?.name || 'Main Campus'}
+                                        </span>
                                     </div>
                                 </div>
                             </div>
@@ -361,9 +404,12 @@ export default function IPDShow({ admission, availableBeds, dispositionOptions }
                                                     #{idx + 1}
                                                 </div>
                                                 <div>
-                                                    <div className="flex items-center gap-2">
+                                                    <div className="flex items-center gap-2 flex-wrap">
                                                         <span className="font-bold text-sm text-slate-900">
                                                             Bed {assign.bed.bed_number}
+                                                        </span>
+                                                        <span className={`px-1.5 py-0.2 rounded text-[10px] font-semibold border ${getCabinBadge(assign.bed.room.room_type).color}`}>
+                                                            {getCabinBadge(assign.bed.room.room_type).label}
                                                         </span>
                                                         <span className="text-xs text-slate-500">
                                                             ({assign.bed.room.ward.name} - Room {assign.bed.room.room_number})
@@ -510,15 +556,20 @@ export default function IPDShow({ admission, availableBeds, dispositionOptions }
                                 <select
                                     value={transferForm.data.new_bed_id}
                                     onChange={(e) => transferForm.setData('new_bed_id', e.target.value)}
-                                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white text-slate-800"
+                                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs bg-white text-slate-800 font-medium"
                                     required
                                 >
-                                    <option value="">-- Select Available Target Bed --</option>
-                                    {availableBeds.map((b) => (
-                                        <option key={b.id} value={b.id}>
-                                            {b.room.ward.name} • Bed {b.bed_number} ({b.bed_type} - ${b.daily_rate}/day)
-                                        </option>
-                                    ))}
+                                    <option value="">-- Select Available Target Bed / Cabin --</option>
+                                    {availableBeds.map((b) => {
+                                        const buildingName = b.room.ward.branch?.name || 'Main Facility';
+                                        const cabinBadge = getCabinBadge(b.room.room_type).label;
+                                        const floorInfo = b.room.ward.floor ? ` [Floor ${b.room.ward.floor}]` : '';
+                                        return (
+                                            <option key={b.id} value={b.id}>
+                                                [{buildingName}] {b.room.ward.name}{floorInfo} ➔ {b.room.room_number} ({cabinBadge}) ➔ Bed {b.bed_number} — ${b.daily_rate}/day
+                                            </option>
+                                        );
+                                    })}
                                 </select>
                                 {transferForm.errors.new_bed_id && (
                                     <p className="text-xs text-rose-500 mt-1">{transferForm.errors.new_bed_id}</p>

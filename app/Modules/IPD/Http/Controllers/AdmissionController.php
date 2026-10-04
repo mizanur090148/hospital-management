@@ -38,7 +38,7 @@ class AdmissionController extends Controller
             'patient',
             'attendingDoctor.user',
             'admittingDepartment',
-            'currentBedAssignment.bed.room.ward',
+            'currentBedAssignment.bed.room.ward.branch',
             'branch',
         ])->latest('admitted_at');
 
@@ -68,8 +68,8 @@ class AdmissionController extends Controller
         $branches = Branch::where('is_active', true)->get();
         $patients = Patient::where('status', 'ACTIVE')->orderBy('first_name')->limit(50)->get();
 
-        // Available beds for new admissions
-        $availableBeds = Bed::with(['room.ward'])
+        // Available beds for new admissions with complete Building / Ward / Cabin topology
+        $availableBeds = Bed::with(['room.ward.branch'])
             ->where('status', BedStatus::Available)
             ->where('is_active', true)
             ->get();
@@ -155,14 +155,14 @@ class AdmissionController extends Controller
             'attendingDoctor.user',
             'admittingDepartment',
             'branch',
-            'currentBedAssignment.bed.room.ward',
-            'bedAssignments.bed.room.ward',
+            'currentBedAssignment.bed.room.ward.branch',
+            'bedAssignments.bed.room.ward.branch',
             'nursingNotes.nurse',
             'medicationAdministrations.administeredBy',
             'medicationAdministrations.prescriptionItem',
         ])->findOrFail($id);
 
-        $availableBeds = Bed::with(['room.ward'])
+        $availableBeds = Bed::with(['room.ward.branch'])
             ->where('status', BedStatus::Available)
             ->where('is_active', true)
             ->get();

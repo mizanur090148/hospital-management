@@ -3,7 +3,7 @@ import { useForm, router } from '@inertiajs/react';
 import {
     Building2, Layers, BedDouble, Plus, CheckCircle2,
     AlertCircle, Sparkles, Wrench, RefreshCw,
-    Users, ChevronRight, X, Phone, Mail, MapPin
+    Users, ChevronRight, X, Phone, Mail, MapPin, DoorClosed
 } from 'lucide-react';
 import { AppLayout } from '@/Layouts/AppLayout';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/Components/ui/Card';
@@ -81,6 +81,7 @@ export default function FacilityIndex({
     const [showDeptModal, setShowDeptModal] = useState(false);
     const [showBranchModal, setShowBranchModal] = useState(false);
     const [showWardModal, setShowWardModal] = useState(false);
+    const [showRoomModal, setShowRoomModal] = useState<string | null>(null); // wardId
     const [showBedModal, setShowBedModal] = useState<string | null>(null); // roomId
 
     // Forms
@@ -90,6 +91,12 @@ export default function FacilityIndex({
         phone: '',
         email: '',
         is_main: false,
+    });
+
+    const roomForm = useForm({
+        ward_id: '',
+        room_number: '',
+        room_type: 'cabin_vip',
     });
 
     const deptForm = useForm({
@@ -123,15 +130,42 @@ export default function FacilityIndex({
         });
     };
 
+    const getCabinInfo = (type: string) => {
+        switch (type) {
+            case 'cabin_vip':
+                return { label: 'VIP Suite Cabin', badge: 'VIP Suite', color: 'bg-amber-50 text-amber-800 border-amber-300' };
+            case 'cabin_deluxe':
+                return { label: 'Deluxe AC Cabin', badge: 'Deluxe Cabin', color: 'bg-purple-50 text-purple-800 border-purple-300' };
+            case 'cabin_single':
+                return { label: 'Single AC Cabin', badge: 'Single Cabin', color: 'bg-cyan-50 text-cyan-800 border-cyan-300' };
+            case 'cabin_twin':
+                return { label: 'Semi-Private / Twin Cabin', badge: 'Twin Cabin', color: 'bg-blue-50 text-blue-800 border-blue-300' };
+            case 'cabin_non_ac':
+                return { label: 'Non-AC Cabin', badge: 'Non-AC Cabin', color: 'bg-slate-100 text-slate-700 border-slate-300' };
+            case 'icu':
+                return { label: 'ICU / CCU Life Support Bay', badge: 'ICU Bay', color: 'bg-rose-50 text-rose-800 border-rose-300' };
+            case 'isolation':
+                return { label: 'Isolation Room', badge: 'Isolation', color: 'bg-orange-50 text-orange-800 border-orange-300' };
+            case 'general_ward':
+                return { label: 'General Ward Room', badge: 'General Ward', color: 'bg-emerald-50 text-emerald-800 border-emerald-300' };
+            case 'dialysis':
+                return { label: 'Dialysis Bay', badge: 'Dialysis', color: 'bg-teal-50 text-teal-800 border-teal-300' };
+            case 'recovery':
+                return { label: 'Post-Op Recovery Room', badge: 'Recovery', color: 'bg-indigo-50 text-indigo-800 border-indigo-300' };
+            default:
+                return { label: type.replace('_', ' '), badge: type.replace('_', ' '), color: 'bg-slate-100 text-slate-700 border-slate-200' };
+        }
+    };
+
     return (
-        <AppLayout title="Facility & Hospital Topology">
+        <AppLayout title="Buildings, Cabins, Wards & Beds">
             <div className="space-y-6">
                 {/* Header & Tabs */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
-                        <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight">Facility & Ward Topology</h2>
+                        <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight">Buildings, Cabins & Wards Topology</h2>
                         <p className="text-xs text-slate-500 mt-0.5">
-                            Manage hospital branches, clinical departments, inpatient wards, and real-time bed allocation.
+                            Manage hospital buildings/branches, VIP cabins, deluxe suites, inpatient wards, and real-time bed allocation.
                         </p>
                     </div>
 
@@ -142,7 +176,7 @@ export default function FacilityIndex({
                         >
                             <span className="flex items-center gap-1.5">
                                 <BedDouble className="w-3.5 h-3.5" />
-                                Wards & Beds ({metrics.totalBeds})
+                                Cabins & Beds ({metrics.totalBeds})
                             </span>
                         </button>
                         <button
@@ -261,47 +295,52 @@ export default function FacilityIndex({
                                             <Button
                                                 size="sm"
                                                 variant="outline"
+                                                className="border-indigo-200 text-indigo-700 hover:bg-indigo-50 font-semibold"
                                                 onClick={() => {
-                                                    const roomNum = prompt(`Enter new Room Number for ${ward.name}:`, 'RM-');
-                                                    if (roomNum) {
-                                                        router.post('/facility/rooms', {
-                                                            ward_id: ward.id,
-                                                            room_number: roomNum,
-                                                            room_type: 'standard',
-                                                        }, { preserveScroll: true });
-                                                    }
+                                                    roomForm.setData({
+                                                        ward_id: ward.id,
+                                                        room_number: '',
+                                                        room_type: 'cabin_vip',
+                                                    });
+                                                    setShowRoomModal(ward.id);
                                                 }}
                                             >
                                                 <Plus className="w-3.5 h-3.5 mr-1" />
-                                                Add Room
+                                                + Add Room / Cabin
                                             </Button>
                                         </div>
                                     </div>
 
                                     <CardContent className="p-4 space-y-4">
                                         {ward.rooms.length === 0 ? (
-                                            <p className="text-xs text-slate-400 italic">No rooms provisioned in this ward yet. Click "Add Room" to create one.</p>
+                                            <p className="text-xs text-slate-400 italic">No rooms or cabins provisioned in this ward yet. Click "+ Add Room / Cabin" to create one.</p>
                                         ) : (
-                                            ward.rooms.map((room) => (
-                                                <div key={room.id} className="bg-slate-50/60 rounded-xl p-3 border border-slate-100">
-                                                    <div className="flex items-center justify-between pb-2 mb-3 border-b border-slate-200/60">
-                                                        <div className="flex items-center gap-2">
-                                                            <span className="font-semibold text-xs text-slate-800">Room {room.room_number}</span>
-                                                            <span className="text-[10px] text-slate-400 uppercase tracking-wider">({room.room_type})</span>
+                                            ward.rooms.map((room) => {
+                                                const cabinInfo = getCabinInfo(room.room_type);
+                                                return (
+                                                    <div key={room.id} className="bg-slate-50/70 rounded-xl p-3 border border-slate-200/80 shadow-xs">
+                                                        <div className="flex items-center justify-between pb-2 mb-3 border-b border-slate-200/60">
+                                                            <div className="flex items-center gap-2">
+                                                                <DoorClosed className="w-4 h-4 text-slate-500" />
+                                                                <span className="font-bold text-xs text-slate-900">{room.room_number}</span>
+                                                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${cabinInfo.color}`}>
+                                                                    {cabinInfo.badge}
+                                                                </span>
+                                                                <span className="text-[10px] text-slate-400">({room.beds.length} {room.beds.length === 1 ? 'bed' : 'beds'})</span>
+                                                            </div>
+                                                            <Button
+                                                                size="sm"
+                                                                variant="ghost"
+                                                                className="text-[11px] h-7 px-2 font-medium text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800"
+                                                                onClick={() => {
+                                                                    bedForm.setData('room_id', room.id);
+                                                                    setShowBedModal(room.id);
+                                                                }}
+                                                            >
+                                                                <Plus className="w-3 h-3 mr-1" />
+                                                                Add Bed
+                                                            </Button>
                                                         </div>
-                                                        <Button
-                                                            size="sm"
-                                                            variant="ghost"
-                                                            className="text-[11px] h-7 px-2"
-                                                            onClick={() => {
-                                                                bedForm.setData('room_id', room.id);
-                                                                setShowBedModal(room.id);
-                                                            }}
-                                                        >
-                                                            <Plus className="w-3 h-3 mr-1" />
-                                                            Add Bed
-                                                        </Button>
-                                                    </div>
 
                                                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                                                         {room.beds.map((bed) => {
@@ -369,8 +408,9 @@ export default function FacilityIndex({
                                                         })}
                                                     </div>
                                                 </div>
-                                            ))
-                                        )}
+                                            );
+                                        })
+                                    )}
                                     </CardContent>
                                 </Card>
                             ))
@@ -682,6 +722,80 @@ export default function FacilityIndex({
                                 </Button>
                                 <Button type="submit" size="sm" isLoading={wardForm.processing}>
                                     Save Ward
+                                </Button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal: Add Room / Cabin */}
+            {showRoomModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
+                    <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-fadeIn">
+                        <div className="flex items-center justify-between border-b pb-3">
+                            <div>
+                                <h4 className="font-bold text-slate-900 text-base">Provision Room or Cabin</h4>
+                                <p className="text-xs text-slate-500">Configure VIP cabins, deluxe suites, ICU bays, or ward rooms.</p>
+                            </div>
+                            <button onClick={() => setShowRoomModal(null)} className="text-slate-400 hover:text-slate-600">
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        <form
+                            onSubmit={(e) => {
+                                e.preventDefault();
+                                roomForm.post('/facility/rooms', {
+                                    onSuccess: () => {
+                                        setShowRoomModal(null);
+                                        roomForm.reset();
+                                    },
+                                });
+                            }}
+                            className="space-y-4"
+                        >
+                            <Input
+                                label="Room / Cabin Number or Code *"
+                                value={roomForm.data.room_number}
+                                onChange={(e) => roomForm.setData('room_number', e.target.value)}
+                                error={roomForm.errors.room_number}
+                                placeholder="e.g. Cabin 501, VIP Suite A, Room 204"
+                                required
+                            />
+
+                            <div className="space-y-1.5">
+                                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700">
+                                    Cabin / Room Classification *
+                                </label>
+                                <select
+                                    value={roomForm.data.room_type}
+                                    onChange={(e) => roomForm.setData('room_type', e.target.value)}
+                                    className="w-full text-xs rounded-lg border border-slate-200 p-2.5 bg-white font-medium text-slate-800"
+                                >
+                                    <optgroup label="Private Cabins & Suites">
+                                        <option value="cabin_vip">⭐ VIP Suite Cabin (Luxury amenities, sofa, private bath)</option>
+                                        <option value="cabin_deluxe">✨ Deluxe AC Cabin (Single patient AC room)</option>
+                                        <option value="cabin_single">🚪 Single AC Cabin (Standard private cabin)</option>
+                                        <option value="cabin_twin">👥 Semi-Private / Twin Cabin (2 patient beds)</option>
+                                        <option value="cabin_non_ac">🪟 Non-AC Standard Cabin</option>
+                                    </optgroup>
+                                    <optgroup label="General & Critical Care">
+                                        <option value="general_ward">🏥 General Inpatient Ward Room</option>
+                                        <option value="icu">🩺 ICU / CCU Critical Life Support Bay</option>
+                                        <option value="isolation">🛡️ Isolation / Negative Pressure Room</option>
+                                        <option value="dialysis">💉 Dialysis Bay</option>
+                                        <option value="recovery">🛌 Post-Operative Recovery Room</option>
+                                    </optgroup>
+                                </select>
+                            </div>
+
+                            <div className="flex justify-end gap-2 pt-3 border-t">
+                                <Button type="button" variant="outline" size="sm" onClick={() => setShowRoomModal(null)}>
+                                    Cancel
+                                </Button>
+                                <Button type="submit" size="sm" isLoading={roomForm.processing}>
+                                    Save Room / Cabin
                                 </Button>
                             </div>
                         </form>

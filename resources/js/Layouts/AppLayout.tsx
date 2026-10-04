@@ -35,7 +35,7 @@ export const AppLayout: React.FC<{ children: React.ReactNode; title?: string }> 
         { label: 'Doctors & Schedules', href: '/doctors', icon: Stethoscope, current: route().current('doctors.*') },
         { label: 'Appointments & Booking', href: '/appointments', icon: Calendar, current: route().current('appointments.*') },
         { label: 'OPD Workstation', href: '/opd', icon: Activity, current: route().current('opd.*'), badge: 'Live Queue' },
-        { label: 'IPD & Inpatient Care', href: '/ipd', icon: BedDouble, current: route().current('admissions.*') },
+        { label: 'Patient Admission & Beds', href: '/ipd', icon: BedDouble, current: route().current('admissions.*'), badge: 'IPD' },
         { label: 'Emergency & Triage', href: '/emergency', icon: Siren, current: route().current('emergency.*'), badge: 'ESI 1-5' },
         { label: 'Nursing Station & MAR', href: '/nursing', icon: Activity, current: route().current('nursing.*') },
         { header: 'Diagnostics & Surgery' },
@@ -50,7 +50,7 @@ export const AppLayout: React.FC<{ children: React.ReactNode; title?: string }> 
         { label: 'Insurance & Claims', href: '/billing/insurance', icon: Shield, current: route().current('billing.insurance.*'), badge: 'TPA' },
         { label: 'General Ledger & COA', href: '/accounting/general-ledger', icon: Building2, current: route().current('accounting.*'), badge: 'Balanced' },
         { header: 'Hospital & Governance' },
-        { label: 'Facility, Wards & Beds', href: '/facility', icon: Building, current: route().current('facility.*') },
+        { label: 'Buildings, Cabins & Wards', href: '/facility', icon: Building, current: route().current('facility.*') },
         { label: 'Staff Directory', href: '/users', icon: Users, current: route().current('users.*') },
         { label: 'Roles & RBAC', href: '/roles', icon: Shield, current: route().current('roles.*') },
     ];

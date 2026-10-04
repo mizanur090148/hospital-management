@@ -42,9 +42,14 @@ interface Admission {
             bed_type: string;
             room: {
                 room_number: string;
+                room_type: string;
                 ward: {
                     name: string;
                     code: string;
+                    floor: string | null;
+                    branch?: {
+                        name: string;
+                    };
                 };
             };
         };
@@ -70,9 +75,14 @@ interface IPDIndexProps {
         daily_rate: string;
         room: {
             room_number: string;
+            room_type: string;
             ward: {
                 name: string;
                 code: string;
+                floor: string | null;
+                branch?: {
+                    name: string;
+                };
             };
         };
     }>;
@@ -98,6 +108,20 @@ export default function IPDIndex({
     const [search, setSearch] = useState(filters.search || '');
     const [statusFilter, setStatusFilter] = useState(filters.status || 'ADMITTED');
     const [deptFilter, setDeptFilter] = useState(filters.department_id || '');
+
+    const getCabinBadge = (type: string) => {
+        switch (type) {
+            case 'cabin_vip': return { label: 'VIP Suite', color: 'bg-amber-50 text-amber-800 border-amber-300' };
+            case 'cabin_deluxe': return { label: 'Deluxe Cabin', color: 'bg-purple-50 text-purple-800 border-purple-300' };
+            case 'cabin_single': return { label: 'Single Cabin', color: 'bg-cyan-50 text-cyan-800 border-cyan-300' };
+            case 'cabin_twin': return { label: 'Twin Cabin', color: 'bg-blue-50 text-blue-800 border-blue-300' };
+            case 'cabin_non_ac': return { label: 'Non-AC Cabin', color: 'bg-slate-100 text-slate-700 border-slate-300' };
+            case 'icu': return { label: 'ICU Bay', color: 'bg-rose-50 text-rose-800 border-rose-300' };
+            case 'isolation': return { label: 'Isolation', color: 'bg-orange-50 text-orange-800 border-orange-300' };
+            case 'general_ward': return { label: 'General Ward', color: 'bg-emerald-50 text-emerald-800 border-emerald-300' };
+            default: return { label: (type || 'Standard').replace('_', ' '), color: 'bg-slate-100 text-slate-700 border-slate-200' };
+        }
+    };
 
     // Form: Admit Patient
     const { data, setData, post, processing, errors, reset } = useForm({
@@ -155,6 +179,30 @@ export default function IPDIndex({
                     </Button>
                 </div>
 
+                {/* Building & Cabin Topology Info Banner */}
+                <div className="bg-gradient-to-r from-emerald-50 via-teal-50 to-cyan-50 border border-teal-200/80 rounded-2xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs shadow-xs">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-teal-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                            <Building className="w-5 h-5" />
+                        </div>
+                        <div>
+                            <span className="font-bold text-slate-900 text-sm">Hospital Buildings, VIP Cabins, Wards & Bed Management</span>
+                            <p className="text-slate-600 mt-0.5">
+                                Set up Hospital Buildings, Floors, VIP Cabins, Deluxe Suites, ICU Bays, and Bed Tariffs ($/day) in Facility Settings.
+                            </p>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                        <Link
+                            href="/facility"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-teal-300 font-semibold text-teal-800 hover:bg-teal-100/60 shadow-2xs transition-colors"
+                        >
+                            <DoorOpen className="w-3.5 h-3.5" />
+                            Manage Buildings & Cabins ↗
+                        </Link>
+                    </div>
+                </div>
+
                 {/* Filters */}
                 <Card>
                     <CardContent className="p-4">
@@ -203,7 +251,7 @@ export default function IPDIndex({
                                 <tr>
                                     <th className="px-6 py-3.5">IPD # & Date</th>
                                     <th className="px-6 py-3.5">Patient Details</th>
-                                    <th className="px-6 py-3.5">Assigned Ward & Bed</th>
+                                    <th className="px-6 py-3.5">Building, Cabin / Ward & Bed</th>
                                     <th className="px-6 py-3.5">Attending Physician</th>
                                     <th className="px-6 py-3.5">Admitting Diagnosis</th>
                                     <th className="px-6 py-3.5">Status</th>
@@ -241,16 +289,25 @@ export default function IPDIndex({
 
                                             <td className="px-6 py-4">
                                                 {adm.currentBedAssignment ? (
-                                                    <div className="flex items-center gap-1.5">
-                                                        <div className="w-8 h-8 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-700 font-bold text-xs">
+                                                    <div className="flex items-start gap-2.5">
+                                                        <div className="w-8 h-8 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-700 font-bold text-xs shrink-0 mt-0.5">
                                                             <BedDouble className="w-4 h-4" />
                                                         </div>
                                                         <div>
-                                                            <div className="font-bold text-xs text-slate-900">
-                                                                {adm.currentBedAssignment.bed.bed_number}
+                                                            <div className="flex items-center gap-1.5 flex-wrap">
+                                                                <span className="font-bold text-xs text-slate-900">
+                                                                    {adm.currentBedAssignment.bed.bed_number}
+                                                                </span>
+                                                                <span className={`px-1.5 py-0.2 rounded text-[10px] font-semibold border ${getCabinBadge(adm.currentBedAssignment.bed.room.room_type).color}`}>
+                                                                    {getCabinBadge(adm.currentBedAssignment.bed.room.room_type).label}
+                                                                </span>
                                                             </div>
-                                                            <div className="text-[11px] text-slate-400">
-                                                                {adm.currentBedAssignment.bed.room.ward.name} ({adm.currentBedAssignment.bed.room.room_number})
+                                                            <div className="text-[11px] text-slate-600 font-medium mt-0.5">
+                                                                {adm.currentBedAssignment.bed.room.room_number} • {adm.currentBedAssignment.bed.room.ward.name}
+                                                                {adm.currentBedAssignment.bed.room.ward.floor && ` (Fl ${adm.currentBedAssignment.bed.room.ward.floor})`}
+                                                            </div>
+                                                            <div className="text-[10px] text-slate-400">
+                                                                Building: {adm.currentBedAssignment.bed.room.ward.branch?.name || adm.branch?.name || 'Main Campus'}
                                                             </div>
                                                         </div>
                                                     </div>
@@ -372,29 +429,49 @@ export default function IPDIndex({
                             </div>
 
                             {/* Bed Allocation Selector */}
-                            <div className="p-3 bg-emerald-50/50 rounded-xl border border-emerald-200/80">
-                                <label className="block text-xs font-bold uppercase tracking-wider text-emerald-900 mb-1.5 flex items-center gap-1.5">
-                                    <BedDouble className="w-4 h-4 text-emerald-700" /> Allocate Available Bed *
-                                </label>
+                            <div className="p-3.5 bg-emerald-50/60 rounded-xl border border-emerald-200/80 space-y-2">
+                                <div className="flex items-center justify-between">
+                                    <label className="block text-xs font-bold uppercase tracking-wider text-emerald-900 flex items-center gap-1.5">
+                                        <BedDouble className="w-4 h-4 text-emerald-700" /> Allocate Available Bed / Cabin *
+                                    </label>
+                                    <Link
+                                        href="/facility"
+                                        target="_blank"
+                                        className="text-[11px] text-emerald-700 hover:text-emerald-900 font-semibold underline"
+                                    >
+                                        Manage Buildings & Cabins ↗
+                                    </Link>
+                                </div>
 
                                 {availableBeds.length === 0 ? (
-                                    <p className="text-xs text-rose-600 font-semibold">
-                                        No available beds currently found in any ward. Please clean or discharge existing beds first.
-                                    </p>
+                                    <div className="p-2.5 bg-rose-50 border border-rose-200 rounded-lg text-xs text-rose-700">
+                                        <p className="font-semibold">No available beds or cabins found.</p>
+                                        <p className="text-[11px] text-rose-600 mt-0.5">Please discharge an inpatient, release cleaned beds, or create new Cabins/Rooms in <Link href="/facility" className="underline font-bold">Buildings, Cabins & Wards</Link>.</p>
+                                    </div>
                                 ) : (
-                                    <select
-                                        value={data.bed_id}
-                                        onChange={(e) => setData('bed_id', e.target.value)}
-                                        className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white text-slate-800"
-                                        required
-                                    >
-                                        <option value="">-- Select Available Inpatient Bed --</option>
-                                        {availableBeds.map((b) => (
-                                            <option key={b.id} value={b.id}>
-                                                {b.room.ward.name} • Room {b.room.room_number} • Bed {b.bed_number} ({b.bed_type} - ${b.daily_rate}/day)
-                                            </option>
-                                        ))}
-                                    </select>
+                                    <div>
+                                        <select
+                                            value={data.bed_id}
+                                            onChange={(e) => setData('bed_id', e.target.value)}
+                                            className="w-full px-3 py-2 border border-emerald-300 rounded-lg text-xs bg-white text-slate-800 font-medium focus:ring-2 focus:ring-emerald-500"
+                                            required
+                                        >
+                                            <option value="">-- Select Hospital Building & Cabin / Bed --</option>
+                                            {availableBeds.map((b) => {
+                                                const buildingName = b.room.ward.branch?.name || 'Main Facility';
+                                                const cabinBadge = getCabinBadge(b.room.room_type).label;
+                                                const floorInfo = b.room.ward.floor ? ` [Floor ${b.room.ward.floor}]` : '';
+                                                return (
+                                                    <option key={b.id} value={b.id}>
+                                                        [{buildingName}] {b.room.ward.name}{floorInfo} ➔ {b.room.room_number} ({cabinBadge}) ➔ Bed {b.bed_number} — ${b.daily_rate}/day
+                                                    </option>
+                                                );
+                                            })}
+                                        </select>
+                                        <p className="text-[10px] text-emerald-700 mt-1">
+                                            Includes VIP Cabins, Deluxe Rooms, Semi-Private, General Wards & ICU Beds across all campus buildings.
+                                        </p>
+                                    </div>
                                 )}
                                 {errors.bed_id && <p className="text-xs text-rose-500 mt-1">{errors.bed_id}</p>}
                             </div>
