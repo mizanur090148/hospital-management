@@ -15,6 +15,7 @@ use App\Modules\Patient\Models\Patient;
 use App\Modules\Pharmacy\Models\GoodsReceiptNote;
 use App\Modules\Pharmacy\Models\PharmacyDispensing;
 use App\Modules\Pharmacy\Models\PurchaseOrder;
+use Illuminate\Support\Facades\DB;
 
 class SequenceGenerator
 {
@@ -295,6 +296,94 @@ class SequenceGenerator
             ->where('dispense_number', 'like', "{$prefix}%")
             ->orderByDesc('dispense_number')
             ->value('dispense_number');
+
+        $nextNumber = 1;
+        if ($latest && preg_match('/-(\d+)$/', $latest, $matches)) {
+            $nextNumber = ((int) $matches[1]) + 1;
+        }
+
+        return sprintf('%s%06d', $prefix, $nextNumber);
+    }
+
+    /**
+     * Generate sequential Invoice Number: INV-YYYY-000001
+     */
+    public static function generateInvoiceNumber(string $tenantId): string
+    {
+        $year = date('Y');
+        $prefix = "INV-{$year}-";
+
+        $latest = DB::table('invoices')
+            ->where('tenant_id', $tenantId)
+            ->where('invoice_number', 'like', "{$prefix}%")
+            ->orderByDesc('invoice_number')
+            ->value('invoice_number');
+
+        $nextNumber = 1;
+        if ($latest && preg_match('/-(\d+)$/', $latest, $matches)) {
+            $nextNumber = ((int) $matches[1]) + 1;
+        }
+
+        return sprintf('%s%06d', $prefix, $nextNumber);
+    }
+
+    /**
+     * Generate sequential Receipt Number: RCP-YYYY-000001
+     */
+    public static function generateReceiptNumber(string $tenantId): string
+    {
+        $year = date('Y');
+        $prefix = "RCP-{$year}-";
+
+        $latest = DB::table('payments')
+            ->where('tenant_id', $tenantId)
+            ->where('receipt_number', 'like', "{$prefix}%")
+            ->orderByDesc('receipt_number')
+            ->value('receipt_number');
+
+        $nextNumber = 1;
+        if ($latest && preg_match('/-(\d+)$/', $latest, $matches)) {
+            $nextNumber = ((int) $matches[1]) + 1;
+        }
+
+        return sprintf('%s%06d', $prefix, $nextNumber);
+    }
+
+    /**
+     * Generate sequential Journal Entry Number: JE-YYYY-000001
+     */
+    public static function generateJournalEntryNumber(string $tenantId): string
+    {
+        $year = date('Y');
+        $prefix = "JE-{$year}-";
+
+        $latest = DB::table('journal_entries')
+            ->where('tenant_id', $tenantId)
+            ->where('entry_number', 'like', "{$prefix}%")
+            ->orderByDesc('entry_number')
+            ->value('entry_number');
+
+        $nextNumber = 1;
+        if ($latest && preg_match('/-(\d+)$/', $latest, $matches)) {
+            $nextNumber = ((int) $matches[1]) + 1;
+        }
+
+        return sprintf('%s%06d', $prefix, $nextNumber);
+    }
+
+    /**
+     * Generate sequential Insurance Claim Number: CLM-YYYY-000001
+     */
+    public static function generateClaimNumber(string $tenantId): string
+    {
+        $year = date('Y');
+        $prefix = "CLM-{$year}-";
+
+        $latest = DB::table('insurance_claims')
+            ->where('tenant_id', $tenantId)
+            ->where('claim_number', 'like', "{$prefix}%")
+            ->orderByDesc('claim_number')
+            ->value('claim_number');
 
         $nextNumber = 1;
         if ($latest && preg_match('/-(\d+)$/', $latest, $matches)) {

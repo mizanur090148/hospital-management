@@ -8,7 +8,9 @@ use App\Core\Enums\AnesthesiaType;
 use App\Core\Enums\AppointmentStatus;
 use App\Core\Enums\AppointmentType;
 use App\Core\Enums\BedStatus;
+use App\Core\Enums\BillingItemType;
 use App\Core\Enums\BloodGroup;
+use App\Core\Enums\ClaimStatus;
 use App\Core\Enums\DepartmentType;
 use App\Core\Enums\DiagnosticPriority;
 use App\Core\Enums\DoctorStatus;
@@ -21,6 +23,7 @@ use App\Core\Enums\MarStatus;
 use App\Core\Enums\NursingShift;
 use App\Core\Enums\OtRoomStatus;
 use App\Core\Enums\PatientStatus;
+use App\Core\Enums\PaymentMethod;
 use App\Core\Enums\PoStatus;
 use App\Core\Enums\PrescriptionStatus;
 use App\Core\Enums\RadiologyModality;
@@ -32,8 +35,14 @@ use App\Core\Enums\UserStatus;
 use App\Core\Enums\UserType;
 use App\Core\Enums\VisitStatus;
 use App\Core\Enums\WarehouseType;
+use App\Modules\Accounting\Services\DoubleEntryAccountingService;
 use App\Modules\Appointment\Models\Appointment;
 use App\Modules\Auth\Models\User;
+use App\Modules\Billing\Models\InsuranceClaim;
+use App\Modules\Billing\Models\InsurancePolicy;
+use App\Modules\Billing\Models\InsuranceProvider;
+use App\Modules\Billing\Models\Invoice;
+use App\Modules\Billing\Services\BillingService;
 use App\Modules\Clinical\Models\Doctor;
 use App\Modules\Clinical\Models\DoctorSchedule;
 use App\Modules\Diagnostics\Models\LabOrder;
@@ -1261,5 +1270,186 @@ class DatabaseSeeder extends Seeder
             'unit_cost' => 8.50,
             'selling_price' => 14.00,
         ]);
+
+        // =========================================================================
+        // 13. Phase 7: Billing, Insurance & Double-Entry Accounting
+        // =========================================================================
+        $accountingService = app(DoubleEntryAccountingService::class);
+        $billingService = app(BillingService::class);
+
+        // A. Ensure Standard Chart of Accounts
+        $accountingService->ensureStandardChartOfAccounts($tenant->id);
+
+        // B. Seed Insurance Providers
+        $bcbs = InsuranceProvider::firstOrCreate([
+            'tenant_id' => $tenant->id,
+            'code' => 'BCBS-US',
+        ], [
+            'id' => (string) Str::uuid(),
+            'name' => 'Blue Cross Blue Shield National',
+            'contact_person' => 'Rachel Miller',
+            'phone' => '+1 (800) 555-2277',
+            'email' => 'claims@bcbs-national.test',
+            'tax_id' => 'PAYER-BCBS-991',
+            'is_active' => true,
+        ]);
+
+        $aetna = InsuranceProvider::firstOrCreate([
+            'tenant_id' => $tenant->id,
+            'code' => 'AETNA-01',
+        ], [
+            'id' => (string) Str::uuid(),
+            'name' => 'Aetna Global Healthcare Group',
+            'contact_person' => 'Marcus Thorne',
+            'phone' => '+1 (800) 555-3388',
+            'email' => 'adjudication@aetna-health.test',
+            'tax_id' => 'PAYER-AET-552',
+            'is_active' => true,
+        ]);
+
+        // C. Seed Patient Insurance Policies
+        $patient1Policy = InsurancePolicy::firstOrCreate([
+            'tenant_id' => $tenant->id,
+            'patient_id' => $patient1->id,
+            'policy_number' => 'POL-BCBS-883921',
+        ], [
+            'id' => (string) Str::uuid(),
+            'insurance_provider_id' => $bcbs->id,
+            'group_number' => 'GRP-CORP-401',
+            'coverage_percentage' => 80.00,
+            'copay_amount' => 25.00,
+            'annual_limit' => 50000.00,
+            'start_date' => now()->subMonths(6)->toDateString(),
+            'end_date' => now()->addMonths(6)->toDateString(),
+            'is_active' => true,
+        ]);
+
+        $patient2Policy = InsurancePolicy::firstOrCreate([
+            'tenant_id' => $tenant->id,
+            'patient_id' => $patient2->id,
+            'policy_number' => 'POL-AET-449102',
+        ], [
+            'id' => (string) Str::uuid(),
+            'insurance_provider_id' => $aetna->id,
+            'group_number' => 'GRP-EXEC-902',
+            'coverage_percentage' => 90.00,
+            'copay_amount' => 15.00,
+            'annual_limit' => 100000.00,
+            'start_date' => now()->subMonths(3)->toDateString(),
+            'end_date' => now()->addMonths(9)->toDateString(),
+            'is_active' => true,
+        ]);
+
+        // D. Create Invoices through BillingService
+        // Invoice 1: Patient 1 Outpatient visit (Consultation + Diagnostics)
+        if (! Invoice::where('tenant_id', $tenant->id)->where('patient_id', $patient1->id)->exists()) {
+            $inv1 = $billingService->createInvoice(
+                tenantId: $tenant->id,
+                branchId: $mainBranch->id,
+                patientId: $patient1->id,
+                invoiceDate: now()->toDateString(),
+                items: [
+                    [
+                        'item_type' => BillingItemType::OpdConsultation->value,
+                        'description' => 'Specialist Cardiology Consultation - Dr. Vance',
+                        'quantity' => 1,
+                        'unit_price' => 75.00,
+                    ],
+                    [
+                        'item_type' => BillingItemType::LabTest->value,
+                        'description' => 'Complete Blood Count (CBC) with Differential',
+                        'quantity' => 1,
+                        'unit_price' => 35.00,
+                    ],
+                    [
+                        'item_type' => BillingItemType::GeneralService->value,
+                        'description' => 'Electrocardiogram (ECG) 12-Lead Diagnostic',
+                        'quantity' => 1,
+                        'unit_price' => 50.00,
+                    ],
+                ],
+                insurancePolicyId: $patient1Policy->id,
+                dueDate: now()->addDays(30)->toDateString(),
+                notes: 'Cardiology clinic consultation and baseline diagnostic workup',
+                createdByUserId: $adminUser->id
+            );
+
+            // Settle patient co-pay / share via Cash
+            if ($inv1->patient_due > 0) {
+                $billingService->recordPayment(
+                    invoice: $inv1,
+                    amount: (float) $inv1->patient_due,
+                    method: PaymentMethod::Cash,
+                    transactionReference: 'CASH-POS-001',
+                    notes: 'Front desk cashier settlement of patient co-pay portion',
+                    cashierUserId: $adminUser->id
+                );
+            }
+        }
+
+        // Invoice 2: Patient 2 Inpatient / Emergency Admission
+        if (! Invoice::where('tenant_id', $tenant->id)->where('patient_id', $patient2->id)->exists()) {
+            $inv2 = $billingService->createInvoice(
+                tenantId: $tenant->id,
+                branchId: $mainBranch->id,
+                patientId: $patient2->id,
+                invoiceDate: now()->toDateString(),
+                items: [
+                    [
+                        'item_type' => BillingItemType::EmergencyFee->value,
+                        'description' => 'Level 1 Trauma Triage & Acute Resuscitation',
+                        'quantity' => 1,
+                        'unit_price' => 350.00,
+                    ],
+                    [
+                        'item_type' => BillingItemType::RadiologyScan->value,
+                        'description' => 'High-Resolution Chest CT Scan with Contrast',
+                        'quantity' => 1,
+                        'unit_price' => 450.00,
+                    ],
+                    [
+                        'item_type' => BillingItemType::PharmacyDispense->value,
+                        'description' => 'IV Paracetamol Infusion & Saline Packs',
+                        'quantity' => 1,
+                        'unit_price' => 45.00,
+                    ],
+                    [
+                        'item_type' => BillingItemType::IpdBedCharges->value,
+                        'description' => 'ICU Critical Telemetry Bed - 1 Day',
+                        'quantity' => 1,
+                        'unit_price' => 600.00,
+                    ],
+                ],
+                insurancePolicyId: $patient2Policy->id,
+                dueDate: now()->addDays(30)->toDateString(),
+                notes: 'Acute trauma resuscitation and inpatient observation care',
+                createdByUserId: $adminUser->id
+            );
+
+            // Patient pays patient due via Credit Card
+            if ($inv2->patient_due > 0) {
+                $billingService->recordPayment(
+                    invoice: $inv2,
+                    amount: (float) $inv2->patient_due,
+                    method: PaymentMethod::CreditCard,
+                    transactionReference: 'AUTH-VISA-9941',
+                    notes: 'Point of Sale Visa card swipe for patient deductible',
+                    cashierUserId: $adminUser->id
+                );
+            }
+
+            // Settle the claim for Patient 2 to demonstrate insurance claim adjudication
+            $claim = InsuranceClaim::where('invoice_id', $inv2->id)->first();
+            if ($claim) {
+                $billingService->adjudicateClaim(
+                    claim: $claim,
+                    newStatus: ClaimStatus::PartiallyApproved,
+                    approvedAmount: round((float) $claim->claimed_amount - 50.00, 2),
+                    disallowedAmount: 50.00,
+                    notes: 'Partial disallowance on high contrast agent; remainder approved and settled to hospital primary account.',
+                    adjudicatorUserId: $adminUser->id
+                );
+            }
+        }
     }
 }

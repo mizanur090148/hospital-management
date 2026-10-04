@@ -1,9 +1,12 @@
 <?php
 
+use App\Modules\Accounting\Http\Controllers\AccountingController;
 use App\Modules\Appointment\Http\Controllers\AppointmentController;
 use App\Modules\Auth\Http\Controllers\AuthenticatedSessionController;
 use App\Modules\Auth\Http\Controllers\TenantOnboardingController;
 use App\Modules\Auth\Http\Controllers\UserController;
+use App\Modules\Billing\Http\Controllers\BillingController;
+use App\Modules\Billing\Http\Controllers\InsuranceController;
 use App\Modules\Clinical\Http\Controllers\DoctorController;
 use App\Modules\Dashboard\Http\Controllers\DashboardController;
 use App\Modules\Diagnostics\Http\Controllers\LaboratoryController;
@@ -167,4 +170,21 @@ Route::middleware('auth')->group(function () {
     Route::post('/pharmacy/procurement/suppliers', [ProcurementController::class, 'storeSupplier'])->name('pharmacy.suppliers.store');
     Route::post('/pharmacy/procurement/purchase-orders', [ProcurementController::class, 'storePurchaseOrder'])->name('pharmacy.purchase_orders.store');
     Route::post('/pharmacy/procurement/goods-receipt-notes', [ProcurementController::class, 'storeGoodsReceiptNote'])->name('pharmacy.goods_receipt_notes.store');
+
+    // Phase 7: Centralized Billing & Invoicing
+    Route::get('/billing/invoices', [BillingController::class, 'index'])->name('billing.invoices.index');
+    Route::post('/billing/invoices', [BillingController::class, 'store'])->name('billing.invoices.store');
+    Route::post('/billing/invoices/{invoice}/payments', [BillingController::class, 'storePayment'])->name('billing.payments.store');
+    Route::post('/billing/invoices/{invoice}/pay', [BillingController::class, 'storePayment'])->name('billing.invoices.pay');
+
+    // Phase 7: Insurance Providers, Policies & Claims Adjudication
+    Route::get('/billing/insurance', [InsuranceController::class, 'index'])->name('billing.insurance.index');
+    Route::post('/billing/insurance/providers', [InsuranceController::class, 'storeProvider'])->name('billing.insurance.providers.store');
+    Route::post('/billing/insurance/policies', [InsuranceController::class, 'storePolicy'])->name('billing.insurance.policies.store');
+    Route::post('/billing/insurance/claims/{claim}/adjudicate', [InsuranceController::class, 'adjudicateClaim'])->name('billing.insurance.claims.adjudicate');
+
+    // Phase 7: Double-Entry General Ledger, Chart of Accounts & Financial Reports
+    Route::get('/accounting/general-ledger', [AccountingController::class, 'index'])->name('accounting.ledger.index');
+    Route::post('/accounting/accounts', [AccountingController::class, 'storeAccount'])->name('accounting.accounts.store');
+    Route::post('/accounting/journal-entries', [AccountingController::class, 'storeJournalEntry'])->name('accounting.journal_entries.store');
 });
