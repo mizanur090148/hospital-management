@@ -178,6 +178,12 @@ export default function IPDShow({ admission, availableBeds, dispositionOptions }
         });
     };
 
+    const attending = admission.attendingDoctor || (admission as any).attending_doctor;
+    const currentBed = admission.currentBedAssignment || (admission as any).current_bed_assignment;
+    const bedAssignments = admission.bedAssignments || (admission as any).bed_assignments || [];
+    const nursingNotes = admission.nursingNotes || (admission as any).nursing_notes || [];
+    const medicationAdministrations = admission.medicationAdministrations || (admission as any).medication_administrations || [];
+
     return (
         <AppLayout title={`Inpatient Dossier - ${admission.ipd_number}`}>
             <div className="space-y-6">
@@ -222,7 +228,7 @@ export default function IPDShow({ admission, availableBeds, dispositionOptions }
                             </div>
                             <div>
                                 <div className="flex flex-wrap items-center gap-2.5">
-                                    <h1 className="text-2xl font-bold tracking-tight text-white">{admission.patient.full_name}</h1>
+                                    <h1 className="text-2xl font-bold tracking-tight text-white">{admission.patient?.full_name || 'Patient'}</h1>
                                     <span className="font-mono text-xs font-bold bg-teal-400/20 text-teal-300 border border-teal-400/30 px-2.5 py-0.5 rounded-md">
                                         {admission.ipd_number}
                                     </span>
@@ -231,19 +237,19 @@ export default function IPDShow({ admission, availableBeds, dispositionOptions }
                                     </Badge>
                                 </div>
                                 <div className="flex flex-wrap items-center gap-y-1 gap-x-4 text-xs text-slate-300 mt-2 font-medium">
-                                    <span>MRN: <strong className="text-white font-mono">{admission.patient.mrn}</strong></span>
+                                    <span>MRN: <strong className="text-white font-mono">{admission.patient?.mrn || 'N/A'}</strong></span>
                                     <span>•</span>
-                                    <span>{admission.patient.age} yrs • {admission.patient.gender}</span>
+                                    <span>{admission.patient?.age ?? '-'} yrs • {admission.patient?.gender || '-'}</span>
                                     <span>•</span>
-                                    <span className="text-rose-300">Blood: <strong>{admission.patient.blood_group}</strong></span>
+                                    <span className="text-rose-300">Blood: <strong>{admission.patient?.blood_group || '-'}</strong></span>
                                     <span>•</span>
-                                    <span>Admitted: <strong>{new Date(admission.admitted_at).toLocaleDateString()}</strong></span>
+                                    <span>Admitted: <strong>{admission.admitted_at ? new Date(admission.admitted_at).toLocaleDateString() : '-'}</strong></span>
                                 </div>
                             </div>
                         </div>
 
                         {/* Current Bed Widget */}
-                        {admission.currentBedAssignment ? (
+                        {currentBed && currentBed.bed ? (
                             <div className="bg-black/30 backdrop-blur-xs p-4 rounded-xl border border-white/10 flex items-center gap-3">
                                 <div className="w-10 h-10 rounded-lg bg-teal-500/20 border border-teal-400/30 flex items-center justify-center text-teal-300">
                                     <BedDouble className="w-5 h-5" />
@@ -252,21 +258,21 @@ export default function IPDShow({ admission, availableBeds, dispositionOptions }
                                     <div className="flex items-center gap-2">
                                         <span className="text-[10px] uppercase font-bold text-teal-300">Current Assigned Bed</span>
                                         <span className="text-[9px] px-1.5 py-0.2 rounded-full font-bold bg-teal-400/20 text-teal-200 border border-teal-300/30">
-                                            {getCabinBadge(admission.currentBedAssignment.bed.room.room_type).label}
+                                            {getCabinBadge(currentBed.bed.room?.room_type || 'standard').label}
                                         </span>
                                     </div>
                                     <div className="font-extrabold text-base text-white">
-                                        Bed {admission.currentBedAssignment.bed.bed_number}
+                                        Bed {currentBed.bed.bed_number}
                                         <span className="text-xs font-normal text-teal-200 ml-2">
-                                            ({admission.currentBedAssignment.bed.room.room_number})
+                                            ({currentBed.bed.room?.room_number || 'Room'})
                                         </span>
                                     </div>
                                     <div className="text-xs text-slate-300">
-                                        {admission.currentBedAssignment.bed.room.ward.name}
-                                        {admission.currentBedAssignment.bed.room.ward.floor && ` • Floor ${admission.currentBedAssignment.bed.room.ward.floor}`}
+                                        {currentBed.bed.room?.ward?.name || 'Ward'}
+                                        {currentBed.bed.room?.ward?.floor && ` • Floor ${currentBed.bed.room.ward.floor}`}
                                         {' • '}
                                         <span className="text-teal-200">
-                                            {admission.currentBedAssignment.bed.room.ward.branch?.name || 'Main Campus'}
+                                            {currentBed.bed.room?.ward?.branch?.name || admission.branch?.name || 'Main Campus'}
                                         </span>
                                     </div>
                                 </div>
@@ -302,7 +308,7 @@ export default function IPDShow({ admission, availableBeds, dispositionOptions }
                         }`}
                     >
                         <Activity className="w-4 h-4" />
-                        Nursing Handover Notes ({admission.nursingNotes.length})
+                        Nursing Handover Notes ({nursingNotes.length})
                     </button>
 
                     <button
@@ -314,7 +320,7 @@ export default function IPDShow({ admission, availableBeds, dispositionOptions }
                         }`}
                     >
                         <Pill className="w-4 h-4" />
-                        Medication Administration (MAR) ({admission.medicationAdministrations.length})
+                        Medication Administration (MAR) ({medicationAdministrations.length})
                     </button>
                 </div>
 
@@ -332,8 +338,8 @@ export default function IPDShow({ admission, availableBeds, dispositionOptions }
                                 <CardContent className="space-y-3 text-xs">
                                     <div>
                                         <span className="text-slate-400 block font-semibold">Attending Doctor</span>
-                                        <span className="font-bold text-slate-900 text-sm">Dr. {admission.attendingDoctor.user.name}</span>
-                                        <span className="text-slate-500 block">{admission.attendingDoctor.department.name}</span>
+                                        <span className="font-bold text-slate-900 text-sm">Dr. {attending?.user?.name || 'Staff Physician'}</span>
+                                        <span className="text-slate-500 block">{attending?.department?.name || 'General Medicine'}</span>
                                     </div>
                                     <div>
                                         <span className="text-slate-400 block font-semibold">Admission Type</span>
@@ -390,12 +396,12 @@ export default function IPDShow({ admission, availableBeds, dispositionOptions }
                                         <BedDouble className="w-4 h-4 text-cyan-600" /> Bed Allocation & Movement History
                                     </CardTitle>
                                     <Badge variant="secondary" className="text-[10px]">
-                                        {admission.bedAssignments.length} Assignments
+                                        {bedAssignments.length} Assignments
                                     </Badge>
                                 </CardHeader>
 
                                 <div className="divide-y divide-slate-100">
-                                    {admission.bedAssignments.map((assign, idx) => (
+                                    {bedAssignments.map((assign, idx) => (
                                         <div key={assign.id} className="p-4 flex items-center justify-between">
                                             <div className="flex items-center gap-3">
                                                 <div className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold text-xs ${
@@ -406,20 +412,20 @@ export default function IPDShow({ admission, availableBeds, dispositionOptions }
                                                 <div>
                                                     <div className="flex items-center gap-2 flex-wrap">
                                                         <span className="font-bold text-sm text-slate-900">
-                                                            Bed {assign.bed.bed_number}
+                                                            Bed {assign.bed?.bed_number}
                                                         </span>
-                                                        <span className={`px-1.5 py-0.2 rounded text-[10px] font-semibold border ${getCabinBadge(assign.bed.room.room_type).color}`}>
-                                                            {getCabinBadge(assign.bed.room.room_type).label}
+                                                        <span className={`px-1.5 py-0.2 rounded text-[10px] font-semibold border ${getCabinBadge(assign.bed?.room?.room_type || 'standard').color}`}>
+                                                            {getCabinBadge(assign.bed?.room?.room_type || 'standard').label}
                                                         </span>
                                                         <span className="text-xs text-slate-500">
-                                                            ({assign.bed.room.ward.name} - Room {assign.bed.room.room_number})
+                                                            ({assign.bed?.room?.ward?.name} - Room {assign.bed?.room?.room_number})
                                                         </span>
                                                         {assign.is_active && (
                                                             <Badge variant="success" className="text-[10px]">Active Bed</Badge>
                                                         )}
                                                     </div>
                                                     <div className="text-xs text-slate-400 mt-0.5">
-                                                        From: {new Date(assign.assigned_at).toLocaleString()}
+                                                        From: {assign.assigned_at ? new Date(assign.assigned_at).toLocaleString() : '-'}
                                                         {assign.released_at && ` • Released: ${new Date(assign.released_at).toLocaleString()}`}
                                                     </div>
                                                     {assign.transfer_reason && (
@@ -440,7 +446,7 @@ export default function IPDShow({ admission, availableBeds, dispositionOptions }
                 {/* Tab: Nursing Care Notes */}
                 {activeTab === 'nursing' && (
                     <div className="space-y-4">
-                        {admission.nursingNotes.length === 0 ? (
+                        {nursingNotes.length === 0 ? (
                             <Card>
                                 <CardContent className="p-8 text-center text-slate-400">
                                     <Activity className="w-8 h-8 mx-auto mb-2 text-slate-300" />
@@ -449,14 +455,14 @@ export default function IPDShow({ admission, availableBeds, dispositionOptions }
                                 </CardContent>
                             </Card>
                         ) : (
-                            admission.nursingNotes.map((note) => (
+                            nursingNotes.map((note) => (
                                 <Card key={note.id}>
                                     <div className="bg-slate-50 px-4 py-3 border-b border-slate-200 flex items-center justify-between">
                                         <div className="flex items-center gap-2">
                                             <Badge variant="cyan">{note.shift} Shift</Badge>
-                                            <span className="text-xs font-semibold text-slate-800">Nurse: {note.nurse.name}</span>
+                                            <span className="text-xs font-semibold text-slate-800">Nurse: {note.nurse?.name || 'Staff Nurse'}</span>
                                         </div>
-                                        <span className="text-xs text-slate-400">{new Date(note.created_at).toLocaleString()}</span>
+                                        <span className="text-xs text-slate-400">{note.created_at ? new Date(note.created_at).toLocaleString() : '-'}</span>
                                     </div>
                                     <CardContent className="p-4 space-y-3">
                                         <p className="text-xs text-slate-800 whitespace-pre-line">{note.notes}</p>
@@ -502,20 +508,20 @@ export default function IPDShow({ admission, availableBeds, dispositionOptions }
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-100">
-                                    {admission.medicationAdministrations.length === 0 ? (
+                                    {medicationAdministrations.length === 0 ? (
                                         <tr>
                                             <td colSpan={7} className="px-6 py-8 text-center text-slate-400">
                                                 No MAR entries recorded yet.
                                             </td>
                                         </tr>
                                     ) : (
-                                        admission.medicationAdministrations.map((mar) => (
+                                        medicationAdministrations.map((mar) => (
                                             <tr key={mar.id}>
-                                                <td className="px-6 py-3.5 font-mono">{new Date(mar.administered_at).toLocaleString()}</td>
+                                                <td className="px-6 py-3.5 font-mono">{mar.administered_at ? new Date(mar.administered_at).toLocaleString() : '-'}</td>
                                                 <td className="px-6 py-3.5 font-bold text-slate-900">{mar.medicine_name}</td>
                                                 <td className="px-6 py-3.5">{mar.dose_given}</td>
                                                 <td className="px-6 py-3.5 font-semibold text-cyan-700">{mar.route}</td>
-                                                <td className="px-6 py-3.5">{mar.administeredBy.name}</td>
+                                                <td className="px-6 py-3.5">{mar.administeredBy?.name || 'Staff'}</td>
                                                 <td className="px-6 py-3.5">
                                                     <span className={`px-2 py-0.5 rounded font-bold text-[10px] ${
                                                         mar.status === 'GIVEN' ? 'bg-emerald-100 text-emerald-800' :

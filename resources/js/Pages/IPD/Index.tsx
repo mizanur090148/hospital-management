@@ -20,7 +20,7 @@ interface Admission {
     admitted_at: string;
     discharged_at: string | null;
     status: 'ADMITTED' | 'DISCHARGED' | 'CANCELLED';
-    patient: {
+    patient?: {
         id: string;
         mrn: string;
         full_name: string;
@@ -28,35 +28,60 @@ interface Admission {
         gender: string;
         blood_group: string;
         phone: string;
-    };
-    attendingDoctor: {
+    } | null;
+    attendingDoctor?: {
         id: string;
-        user: { name: string };
-        department: { name: string };
-    };
-    currentBedAssignment: {
+        user?: { name: string } | null;
+        department?: { name: string } | null;
+    } | null;
+    attending_doctor?: {
         id: string;
-        bed: {
+        user?: { name: string } | null;
+        department?: { name: string } | null;
+    } | null;
+    currentBedAssignment?: {
+        id: string;
+        bed?: {
             id: string;
             bed_number: string;
             bed_type: string;
-            room: {
+            room?: {
                 room_number: string;
                 room_type: string;
-                ward: {
+                ward?: {
                     name: string;
                     code: string;
                     floor: string | null;
                     branch?: {
                         name: string;
-                    };
-                };
-            };
-        };
+                    } | null;
+                } | null;
+            } | null;
+        } | null;
     } | null;
-    branch: {
+    current_bed_assignment?: {
+        id: string;
+        bed?: {
+            id: string;
+            bed_number: string;
+            bed_type: string;
+            room?: {
+                room_number: string;
+                room_type: string;
+                ward?: {
+                    name: string;
+                    code: string;
+                    floor: string | null;
+                    branch?: {
+                        name: string;
+                    } | null;
+                } | null;
+            } | null;
+        } | null;
+    } | null;
+    branch?: {
         name: string;
-    };
+    } | null;
 }
 
 interface IPDIndexProps {
@@ -267,82 +292,103 @@ export default function IPDIndex({
                                         </td>
                                     </tr>
                                 ) : (
-                                    admissions.data.map((adm) => (
-                                        <tr key={adm.id} className="hover:bg-slate-50/70 transition-colors">
-                                            <td className="px-6 py-4">
-                                                <div className="font-mono font-bold text-xs text-cyan-800 bg-cyan-50 px-2 py-0.5 rounded border border-cyan-200/60 inline-block">
-                                                    {adm.ipd_number}
-                                                </div>
-                                                <div className="text-xs text-slate-400 mt-1">
-                                                    {new Date(adm.admitted_at).toLocaleDateString()}
-                                                </div>
-                                            </td>
+                                    admissions.data.map((adm) => {
+                                        const attending = adm.attendingDoctor || adm.attending_doctor;
+                                        const currentBed = adm.currentBedAssignment || adm.current_bed_assignment;
+                                        const patient = adm.patient;
+                                        const roomType = currentBed?.bed?.room?.room_type || 'standard';
+                                        const bedInfo = currentBed?.bed;
+                                        const roomInfo = bedInfo?.room;
+                                        const wardInfo = roomInfo?.ward;
+                                        const branchName = wardInfo?.branch?.name || adm.branch?.name || 'Main Campus';
 
-                                            <td className="px-6 py-4">
-                                                <Link href={`/patients/${adm.patient.id}`} className="font-semibold text-slate-900 hover:text-cyan-700">
-                                                    {adm.patient.full_name}
-                                                </Link>
-                                                <div className="text-xs text-slate-400 mt-0.5">
-                                                    {adm.patient.mrn} • {adm.patient.age}y • {adm.patient.blood_group}
-                                                </div>
-                                            </td>
-
-                                            <td className="px-6 py-4">
-                                                {adm.currentBedAssignment ? (
-                                                    <div className="flex items-start gap-2.5">
-                                                        <div className="w-8 h-8 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-700 font-bold text-xs shrink-0 mt-0.5">
-                                                            <BedDouble className="w-4 h-4" />
-                                                        </div>
-                                                        <div>
-                                                            <div className="flex items-center gap-1.5 flex-wrap">
-                                                                <span className="font-bold text-xs text-slate-900">
-                                                                    {adm.currentBedAssignment.bed.bed_number}
-                                                                </span>
-                                                                <span className={`px-1.5 py-0.2 rounded text-[10px] font-semibold border ${getCabinBadge(adm.currentBedAssignment.bed.room.room_type).color}`}>
-                                                                    {getCabinBadge(adm.currentBedAssignment.bed.room.room_type).label}
-                                                                </span>
-                                                            </div>
-                                                            <div className="text-[11px] text-slate-600 font-medium mt-0.5">
-                                                                {adm.currentBedAssignment.bed.room.room_number} • {adm.currentBedAssignment.bed.room.ward.name}
-                                                                {adm.currentBedAssignment.bed.room.ward.floor && ` (Fl ${adm.currentBedAssignment.bed.room.ward.floor})`}
-                                                            </div>
-                                                            <div className="text-[10px] text-slate-400">
-                                                                Building: {adm.currentBedAssignment.bed.room.ward.branch?.name || adm.branch?.name || 'Main Campus'}
-                                                            </div>
-                                                        </div>
+                                        return (
+                                            <tr key={adm.id} className="hover:bg-slate-50/70 transition-colors">
+                                                <td className="px-6 py-4">
+                                                    <div className="font-mono font-bold text-xs text-cyan-800 bg-cyan-50 px-2 py-0.5 rounded border border-cyan-200/60 inline-block">
+                                                        {adm.ipd_number}
                                                     </div>
-                                                ) : (
-                                                    <span className="text-xs text-slate-400 italic">No bed assigned</span>
-                                                )}
-                                            </td>
+                                                    <div className="text-xs text-slate-400 mt-1">
+                                                        {adm.admitted_at ? new Date(adm.admitted_at).toLocaleDateString() : '-'}
+                                                    </div>
+                                                </td>
 
-                                            <td className="px-6 py-4">
-                                                <div className="font-medium text-slate-800">Dr. {adm.attendingDoctor.user.name}</div>
-                                                <div className="text-xs text-slate-400">{adm.attendingDoctor.department.name}</div>
-                                            </td>
+                                                <td className="px-6 py-4">
+                                                    {patient ? (
+                                                        <>
+                                                            <Link href={`/patients/${patient.id}`} className="font-semibold text-slate-900 hover:text-cyan-700">
+                                                                {patient.full_name || 'Unnamed Patient'}
+                                                            </Link>
+                                                            <div className="text-xs text-slate-400 mt-0.5">
+                                                                {patient.mrn} • {patient.age ?? '-'}y • {patient.blood_group || '-'}
+                                                            </div>
+                                                        </>
+                                                    ) : (
+                                                        <span className="text-xs text-slate-400 italic">No patient profile</span>
+                                                    )}
+                                                </td>
 
-                                            <td className="px-6 py-4 max-w-[200px]">
-                                                <p className="text-xs text-slate-700 truncate" title={adm.admitting_diagnosis}>
-                                                    {adm.admitting_diagnosis}
-                                                </p>
-                                                <span className="text-[10px] text-slate-400">{adm.admission_type}</span>
-                                            </td>
+                                                <td className="px-6 py-4">
+                                                    {currentBed && bedInfo ? (
+                                                        <div className="flex items-start gap-2.5">
+                                                            <div className="w-8 h-8 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-700 font-bold text-xs shrink-0 mt-0.5">
+                                                                <BedDouble className="w-4 h-4" />
+                                                            </div>
+                                                            <div>
+                                                                <div className="flex items-center gap-1.5 flex-wrap">
+                                                                    <span className="font-bold text-xs text-slate-900">
+                                                                        {bedInfo.bed_number}
+                                                                    </span>
+                                                                    <span className={`px-1.5 py-0.2 rounded text-[10px] font-semibold border ${getCabinBadge(roomType).color}`}>
+                                                                        {getCabinBadge(roomType).label}
+                                                                    </span>
+                                                                </div>
+                                                                <div className="text-[11px] text-slate-600 font-medium mt-0.5">
+                                                                    {roomInfo?.room_number || 'Room'} • {wardInfo?.name || 'Ward'}
+                                                                    {wardInfo?.floor && ` (Fl ${wardInfo.floor})`}
+                                                                </div>
+                                                                <div className="text-[10px] text-slate-400">
+                                                                    Building: {branchName}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    ) : (
+                                                        <span className="text-xs text-slate-400 italic">No bed assigned</span>
+                                                    )}
+                                                </td>
 
-                                            <td className="px-6 py-4">
-                                                <Badge variant={adm.status === 'ADMITTED' ? 'success' : 'secondary'} className="text-[11px]">
-                                                    {adm.status}
-                                                </Badge>
-                                            </td>
+                                                <td className="px-6 py-4">
+                                                    <div className="font-medium text-slate-800">
+                                                        Dr. {attending?.user?.name || 'Staff Physician'}
+                                                    </div>
+                                                    <div className="text-xs text-slate-400">
+                                                        {attending?.department?.name || 'General Medicine'}
+                                                    </div>
+                                                </td>
 
-                                            <td className="px-6 py-4 text-right">
-                                                <Link href={`/ipd/admissions/${adm.id}`}>
-                                                    <Button size="sm" variant="outline" className="h-7 text-xs">
-                                                        Inpatient Dossier <ArrowRight className="w-3.5 h-3.5 ml-1" />
-                                                    </Button>
-                                                </Link>
-                                            </td>
-                                        </tr>
-                                    ))
+                                                <td className="px-6 py-4 max-w-[200px]">
+                                                    <p className="text-xs text-slate-700 truncate" title={adm.admitting_diagnosis}>
+                                                        {adm.admitting_diagnosis}
+                                                    </p>
+                                                    <span className="text-[10px] text-slate-400">{adm.admission_type}</span>
+                                                </td>
+
+                                                <td className="px-6 py-4">
+                                                    <Badge variant={adm.status === 'ADMITTED' ? 'success' : 'secondary'} className="text-[11px]">
+                                                        {adm.status}
+                                                    </Badge>
+                                                </td>
+
+                                                <td className="px-6 py-4 text-right">
+                                                    <Link href={`/ipd/admissions/${adm.id}`}>
+                                                        <Button size="sm" variant="outline" className="h-7 text-xs">
+                                                            Inpatient Dossier <ArrowRight className="w-3.5 h-3.5 ml-1" />
+                                                        </Button>
+                                                    </Link>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })
                                 )}
                             </tbody>
                         </table>
@@ -392,7 +438,9 @@ export default function IPDIndex({
                                     >
                                         <option value="">-- Choose Doctor --</option>
                                         {doctors.map((d) => (
-                                            <option key={d.id} value={d.id}>Dr. {d.user.name} ({d.department.name})</option>
+                                            <option key={d.id} value={d.id}>
+                                                Dr. {d.user?.name || 'Physician'} ({d.department?.name || 'General'})
+                                            </option>
                                         ))}
                                     </select>
                                     {errors.attending_doctor_id && <p className="text-xs text-rose-500 mt-1">{errors.attending_doctor_id}</p>}
@@ -458,12 +506,14 @@ export default function IPDIndex({
                                         >
                                             <option value="">-- Select Hospital Building & Cabin / Bed --</option>
                                             {availableBeds.map((b) => {
-                                                const buildingName = b.room.ward.branch?.name || 'Main Facility';
-                                                const cabinBadge = getCabinBadge(b.room.room_type).label;
-                                                const floorInfo = b.room.ward.floor ? ` [Floor ${b.room.ward.floor}]` : '';
+                                                const buildingName = b.room?.ward?.branch?.name || 'Main Facility';
+                                                const cabinBadge = getCabinBadge(b.room?.room_type || 'standard').label;
+                                                const floorInfo = b.room?.ward?.floor ? ` [Floor ${b.room.ward.floor}]` : '';
+                                                const roomNumber = b.room?.room_number || 'Room';
+                                                const wardName = b.room?.ward?.name || 'Ward';
                                                 return (
                                                     <option key={b.id} value={b.id}>
-                                                        [{buildingName}] {b.room.ward.name}{floorInfo} ➔ {b.room.room_number} ({cabinBadge}) ➔ Bed {b.bed_number} — ${b.daily_rate}/day
+                                                        [{buildingName}] {wardName}{floorInfo} ➔ {roomNumber} ({cabinBadge}) ➔ Bed {b.bed_number} — ${b.daily_rate}/day
                                                     </option>
                                                 );
                                             })}

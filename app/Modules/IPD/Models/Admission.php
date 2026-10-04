@@ -53,6 +53,45 @@ class Admission extends Model
         'initial_deposit' => 'decimal:2',
     ];
 
+    protected $appends = [
+        'attendingDoctor',
+        'currentBedAssignment',
+        'bedAssignments',
+        'nursingNotes',
+        'medicationAdministrations',
+        'admittingDepartment',
+    ];
+
+    public function getAttendingDoctorAttribute(): ?Doctor
+    {
+        return $this->relationLoaded('attendingDoctor') ? $this->getRelation('attendingDoctor') : null;
+    }
+
+    public function getCurrentBedAssignmentAttribute(): ?BedAssignment
+    {
+        return $this->relationLoaded('currentBedAssignment') ? $this->getRelation('currentBedAssignment') : null;
+    }
+
+    public function getBedAssignmentsAttribute(): mixed
+    {
+        return $this->relationLoaded('bedAssignments') ? $this->getRelation('bedAssignments') : [];
+    }
+
+    public function getNursingNotesAttribute(): mixed
+    {
+        return $this->relationLoaded('nursingNotes') ? $this->getRelation('nursingNotes') : [];
+    }
+
+    public function getMedicationAdministrationsAttribute(): mixed
+    {
+        return $this->relationLoaded('medicationAdministrations') ? $this->getRelation('medicationAdministrations') : [];
+    }
+
+    public function getAdmittingDepartmentAttribute(): ?Department
+    {
+        return $this->relationLoaded('admittingDepartment') ? $this->getRelation('admittingDepartment') : null;
+    }
+
     public function tenant(): BelongsTo
     {
         return $this->belongsTo(Tenant::class, 'tenant_id');

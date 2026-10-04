@@ -37,6 +37,7 @@ class AdmissionController extends Controller
         $query = Admission::with([
             'patient',
             'attendingDoctor.user',
+            'attendingDoctor.department',
             'admittingDepartment',
             'currentBedAssignment.bed.room.ward.branch',
             'branch',
@@ -153,6 +154,7 @@ class AdmissionController extends Controller
         $admission = Admission::with([
             'patient',
             'attendingDoctor.user',
+            'attendingDoctor.department',
             'admittingDepartment',
             'branch',
             'currentBedAssignment.bed.room.ward.branch',

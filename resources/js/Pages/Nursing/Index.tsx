@@ -198,18 +198,18 @@ export default function NursingIndex({
                                     {/* Patient Info */}
                                     <div>
                                         <Link href={`/ipd/admissions/${inpatient.id}`} className="font-bold text-sm text-slate-900 hover:text-cyan-700">
-                                            {inpatient.patient.full_name}
+                                            {inpatient.patient?.full_name || 'Patient'}
                                         </Link>
                                         <div className="text-xs text-slate-400 mt-0.5">
-                                            MRN: {inpatient.patient.mrn} • {inpatient.patient.age}y • {inpatient.patient.gender}
+                                            MRN: {inpatient.patient?.mrn || 'N/A'} • {inpatient.patient?.age ?? '-'}y • {inpatient.patient?.gender || '-'}
                                         </div>
                                         <div className="text-xs text-slate-600 mt-1 font-medium">
-                                            Attending: Dr. {inpatient.attendingDoctor.user.name}
+                                            Attending: Dr. {inpatient.attendingDoctor?.user?.name || (inpatient as any).attending_doctor?.user?.name || 'Physician'}
                                         </div>
                                     </div>
 
                                     {/* Allergies Alert */}
-                                    {inpatient.patient.allergies && inpatient.patient.allergies.length > 0 && (
+                                    {inpatient.patient?.allergies && inpatient.patient.allergies.length > 0 && (
                                         <div className="flex items-center gap-1.5 p-1.5 rounded bg-amber-50 border border-amber-200 text-amber-800 text-[11px] font-semibold">
                                             <AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
                                             <span>Allergy: {inpatient.patient.allergies.map(a => a.substance).join(', ')}</span>
@@ -217,7 +217,7 @@ export default function NursingIndex({
                                     )}
 
                                     {/* Latest Vitals / Care Snippet */}
-                                    {inpatient.nursingNotes.length > 0 && inpatient.nursingNotes[0].vitals && (
+                                    {(inpatient.nursingNotes || []).length > 0 && inpatient.nursingNotes[0]?.vitals && (
                                         <div className="p-2 bg-slate-50 rounded-lg text-xs grid grid-cols-3 gap-1 text-center font-medium">
                                             <div>BP: <strong className="text-slate-800">{inpatient.nursingNotes[0].vitals.systolic}/{inpatient.nursingNotes[0].vitals.diastolic}</strong></div>
                                             <div>Pulse: <strong className="text-slate-800">{inpatient.nursingNotes[0].vitals.pulse_rate}</strong></div>
