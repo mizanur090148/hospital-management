@@ -3,6 +3,7 @@
 namespace App\Modules\Clinical\Http\Controllers;
 
 use App\Core\Enums\DoctorStatus;
+use App\Core\Enums\UserStatus;
 use App\Core\Enums\UserType;
 use App\Core\Tenancy\TenantContext;
 use App\Http\Controllers\Controller;
@@ -59,7 +60,7 @@ class DoctorController extends Controller
 
         // Users eligible to become doctor profiles (user_type = doctor or staff)
         $eligibleUsers = User::whereIn('user_type', [UserType::Doctor, UserType::Staff, UserType::HospitalAdmin])
-            ->where('is_active', true)
+            ->where('status', UserStatus::Active)
             ->whereDoesntHave('doctor')
             ->orderBy('name')
             ->get();
