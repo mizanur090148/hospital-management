@@ -6,7 +6,8 @@ import {
     BedDouble, Siren, Pill, FlaskConical, ScanLine, Scissors,
     Receipt, Shield, Menu, X, Check,
     Building, Clock, CalendarRange, Banknote, TrendingUp, HeartPulse,
-    Bell, FileCheck, FolderLock
+    Bell, FileCheck, FolderLock,
+    Mic, BookOpen, FileCheck2, Sparkles
 } from 'lucide-react';
 import { PageProps } from '@/types';
 import { Badge } from '@/Components/ui/Badge';
@@ -63,6 +64,10 @@ export const AppLayout: React.FC<{ children: React.ReactNode; title?: string }> 
         { label: 'Notifications & Alerts', href: '/notifications', icon: Bell, current: route().current('notifications.*'), badge: 'Multi-Channel' },
         { label: 'Cryptographic Audit Trail', href: '/audit/compliance', icon: FileCheck, current: route().current('audit.*'), badge: 'Hash-Chain' },
         { label: 'Clinical Document Vault', href: '/documents', icon: FolderLock, current: route().current('documents.*'), badge: 'HIPAA/S3' },
+        { header: 'AI & Clinical Intelligence' },
+        { label: 'Ambient Clinical Scribe', href: '/ai/scribe', icon: Mic, current: route().current('ai.scribe.*'), badge: 'SOAP AI' },
+        { label: 'Medical RAG Knowledge', href: '/ai/knowledge-base', icon: BookOpen, current: route().current('ai.knowledge_base.*'), badge: 'Guidelines' },
+        { label: 'Discharge Synthesizer', href: '/ai/discharge-summaries', icon: FileCheck2, current: route().current('ai.summaries.*'), badge: 'Auto-Summ' },
         { header: 'Hospital & Governance' },
         { label: 'Buildings, Cabins & Wards', href: '/facility', icon: Building, current: route().current('facility.*') },
         { label: 'Staff Directory', href: '/users', icon: Users, current: route().current('users.*') },

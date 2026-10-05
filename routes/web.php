@@ -1,6 +1,9 @@
 <?php
 
 use App\Modules\Accounting\Http\Controllers\AccountingController;
+use App\Modules\AI\Http\Controllers\ClinicalScribeController;
+use App\Modules\AI\Http\Controllers\ClinicalSummaryController;
+use App\Modules\AI\Http\Controllers\MedicalRagController;
 use App\Modules\Analytics\Http\Controllers\ExecutiveAnalyticsController;
 use App\Modules\Appointment\Http\Controllers\AppointmentController;
 use App\Modules\Audit\Http\Controllers\AuditComplianceController;
@@ -252,4 +255,21 @@ Route::middleware('auth')->group(function () {
     Route::get('/documents/{document}/secure-download', [DocumentStorageController::class, 'download'])->name('documents.secure-download');
     Route::post('/documents/{document}/temporary-url', [DocumentStorageController::class, 'temporaryUrl'])->name('documents.temporary_url');
     Route::post('/documents/{document}/verify-checksum', [DocumentStorageController::class, 'verifyChecksum'])->name('documents.verify_checksum');
+
+    // Phase 11: Ambient Clinical Scribe & Dictation Structuring
+    Route::get('/ai/scribe', [ClinicalScribeController::class, 'index'])->name('ai.scribe.index');
+    Route::post('/ai/scribe/sessions', [ClinicalScribeController::class, 'startSession'])->name('ai.scribe.sessions.store');
+    Route::post('/ai/scribe/sessions/{session}/process', [ClinicalScribeController::class, 'processTranscript'])->name('ai.scribe.sessions.process');
+    Route::post('/ai/scribe/sessions/{session}/commit', [ClinicalScribeController::class, 'commitSoap'])->name('ai.scribe.sessions.commit');
+
+    // Phase 11: Medical Domain RAG & Clinical Knowledge Base
+    Route::get('/ai/knowledge-base', [MedicalRagController::class, 'index'])->name('ai.knowledge_base.index');
+    Route::post('/ai/knowledge-base', [MedicalRagController::class, 'store'])->name('ai.knowledge_base.store');
+    Route::post('/ai/knowledge-base/search', [MedicalRagController::class, 'search'])->name('ai.knowledge_base.search');
+    Route::post('/ai/knowledge-base/check-interactions', [MedicalRagController::class, 'checkInteractions'])->name('ai.knowledge_base.interactions');
+
+    // Phase 11: Automated Clinical & Discharge Summaries
+    Route::get('/ai/discharge-summaries', [ClinicalSummaryController::class, 'index'])->name('ai.summaries.index');
+    Route::post('/ai/discharge-summaries/admission/{admission}', [ClinicalSummaryController::class, 'synthesize'])->name('ai.summaries.synthesize');
+    Route::patch('/ai/discharge-summaries/{summary}/approve', [ClinicalSummaryController::class, 'approve'])->name('ai.summaries.approve');
 });

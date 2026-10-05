@@ -436,4 +436,48 @@ class SequenceGenerator
 
         return sprintf('%s%06d', $prefix, $nextNumber);
     }
+
+    /**
+     * Generate sequential AI Ambient Scribe Session Number: SCRIBE-YYYY-000001
+     */
+    public static function generateScribeSessionNumber(string $tenantId): string
+    {
+        $year = date('Y');
+        $prefix = "SCRIBE-{$year}-";
+
+        $latest = DB::table('ai_scribe_sessions')
+            ->where('tenant_id', $tenantId)
+            ->where('session_number', 'like', "{$prefix}%")
+            ->orderByDesc('session_number')
+            ->value('session_number');
+
+        $nextNumber = 1;
+        if ($latest && preg_match('/-(\d+)$/', $latest, $matches)) {
+            $nextNumber = ((int) $matches[1]) + 1;
+        }
+
+        return sprintf('%s%06d', $prefix, $nextNumber);
+    }
+
+    /**
+     * Generate sequential Clinical Summary Number: SUMM-YYYY-000001
+     */
+    public static function generateSummaryNumber(string $tenantId): string
+    {
+        $year = date('Y');
+        $prefix = "SUMM-{$year}-";
+
+        $latest = DB::table('clinical_summaries')
+            ->where('tenant_id', $tenantId)
+            ->where('summary_number', 'like', "{$prefix}%")
+            ->orderByDesc('summary_number')
+            ->value('summary_number');
+
+        $nextNumber = 1;
+        if ($latest && preg_match('/-(\d+)$/', $latest, $matches)) {
+            $nextNumber = ((int) $matches[1]) + 1;
+        }
+
+        return sprintf('%s%06d', $prefix, $nextNumber);
+    }
 }
