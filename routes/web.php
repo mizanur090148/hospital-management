@@ -34,6 +34,8 @@ use App\Modules\Pharmacy\Http\Controllers\ProcurementController;
 use App\Modules\Portal\Http\Controllers\DoctorWorkstationController;
 use App\Modules\Portal\Http\Controllers\PatientPortalController;
 use App\Modules\RBAC\Http\Controllers\RoleController;
+use App\Modules\SaaS\Http\Controllers\SuperAdminSaaSController;
+use App\Modules\SaaS\Http\Controllers\TenantSubscriptionController;
 use App\Modules\Storage\Http\Controllers\DocumentStorageController;
 use App\Modules\Tenancy\Models\Branch;
 use App\Modules\Tenancy\Models\Tenant;
@@ -272,4 +274,14 @@ Route::middleware('auth')->group(function () {
     Route::get('/ai/discharge-summaries', [ClinicalSummaryController::class, 'index'])->name('ai.summaries.index');
     Route::post('/ai/discharge-summaries/admission/{admission}', [ClinicalSummaryController::class, 'synthesize'])->name('ai.summaries.synthesize');
     Route::patch('/ai/discharge-summaries/{summary}/approve', [ClinicalSummaryController::class, 'approve'])->name('ai.summaries.approve');
+
+    // Phase 12: SaaS Monetization, Subscription Portal & Quota Management
+    Route::get('/saas/subscription', [TenantSubscriptionController::class, 'portal'])->name('saas.subscription.index');
+    Route::post('/saas/subscription/change-plan', [TenantSubscriptionController::class, 'changePlan'])->name('saas.subscription.change_plan');
+    Route::post('/saas/subscription/invoices/{invoice}/pay', [TenantSubscriptionController::class, 'payInvoice'])->name('saas.subscription.invoices.pay');
+    Route::post('/saas/subscription/cancel', [TenantSubscriptionController::class, 'cancel'])->name('saas.subscription.cancel');
+
+    // Phase 12: SuperAdmin Global SaaS Management Cockpit
+    Route::get('/saas/admin/cockpit', [SuperAdminSaaSController::class, 'cockpit'])->name('saas.admin.cockpit');
+    Route::patch('/saas/admin/plans/{plan}', [SuperAdminSaaSController::class, 'updatePlan'])->name('saas.admin.plans.update');
 });

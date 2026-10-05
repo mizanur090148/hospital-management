@@ -7,7 +7,8 @@ import {
     Receipt, Shield, Menu, X, Check,
     Building, Clock, CalendarRange, Banknote, TrendingUp, HeartPulse,
     Bell, FileCheck, FolderLock,
-    Mic, BookOpen, FileCheck2, Sparkles
+    Mic, BookOpen, FileCheck2, Sparkles,
+    CreditCard, Gauge
 } from 'lucide-react';
 import { PageProps } from '@/types';
 import { Badge } from '@/Components/ui/Badge';
@@ -68,6 +69,9 @@ export const AppLayout: React.FC<{ children: React.ReactNode; title?: string }> 
         { label: 'Ambient Clinical Scribe', href: '/ai/scribe', icon: Mic, current: route().current('ai.scribe.*'), badge: 'SOAP AI' },
         { label: 'Medical RAG Knowledge', href: '/ai/knowledge-base', icon: BookOpen, current: route().current('ai.knowledge_base.*'), badge: 'Guidelines' },
         { label: 'Discharge Synthesizer', href: '/ai/discharge-summaries', icon: FileCheck2, current: route().current('ai.summaries.*'), badge: 'Auto-Summ' },
+        { header: 'SaaS Monetization & Plans' },
+        { label: 'Subscription & Quotas', href: '/saas/subscription', icon: CreditCard, current: route().current('saas.subscription.*'), badge: 'Tier/Limits' },
+        { label: 'SuperAdmin SaaS Cockpit', href: '/saas/admin/cockpit', icon: Gauge, current: route().current('saas.admin.*'), badge: 'MRR/ARR' },
         { header: 'Hospital & Governance' },
         { label: 'Buildings, Cabins & Wards', href: '/facility', icon: Building, current: route().current('facility.*') },
         { label: 'Staff Directory', href: '/users', icon: Users, current: route().current('users.*') },

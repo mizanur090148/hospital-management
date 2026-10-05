@@ -480,4 +480,48 @@ class SequenceGenerator
 
         return sprintf('%s%06d', $prefix, $nextNumber);
     }
+
+    /**
+     * Generate sequential SaaS Subscription Number: SUB-YYYY-000001
+     */
+    public static function generateSubscriptionNumber(string $tenantId): string
+    {
+        $year = date('Y');
+        $prefix = "SUB-{$year}-";
+
+        $latest = DB::table('saas_subscriptions')
+            ->where('tenant_id', $tenantId)
+            ->where('subscription_number', 'like', "{$prefix}%")
+            ->orderByDesc('subscription_number')
+            ->value('subscription_number');
+
+        $nextNumber = 1;
+        if ($latest && preg_match('/-(\d+)$/', $latest, $matches)) {
+            $nextNumber = ((int) $matches[1]) + 1;
+        }
+
+        return sprintf('%s%06d', $prefix, $nextNumber);
+    }
+
+    /**
+     * Generate sequential SaaS Subscription Invoice Number: SINV-YYYY-000001
+     */
+    public static function generateSubscriptionInvoiceNumber(string $tenantId): string
+    {
+        $year = date('Y');
+        $prefix = "SINV-{$year}-";
+
+        $latest = DB::table('saas_subscription_invoices')
+            ->where('tenant_id', $tenantId)
+            ->where('invoice_number', 'like', "{$prefix}%")
+            ->orderByDesc('invoice_number')
+            ->value('invoice_number');
+
+        $nextNumber = 1;
+        if ($latest && preg_match('/-(\d+)$/', $latest, $matches)) {
+            $nextNumber = ((int) $matches[1]) + 1;
+        }
+
+        return sprintf('%s%06d', $prefix, $nextNumber);
+    }
 }

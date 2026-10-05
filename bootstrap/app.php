@@ -4,6 +4,8 @@ use App\Core\RBAC\Middleware\RequirePermission;
 use App\Core\Tenancy\Middleware\ResolveTenant;
 use App\Core\Tenancy\Middleware\SetPostgresRlsSession;
 use App\Http\Middleware\HandleInertiaRequests;
+use App\Modules\SaaS\Http\Middleware\EnforceFeatureAccess;
+use App\Modules\SaaS\Http\Middleware\EnforceSubscriptionQuota;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -24,6 +26,8 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'permission' => RequirePermission::class,
+            'quota' => EnforceSubscriptionQuota::class,
+            'feature' => EnforceFeatureAccess::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
