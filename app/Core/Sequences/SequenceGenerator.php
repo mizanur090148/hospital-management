@@ -414,4 +414,26 @@ class SequenceGenerator
 
         return sprintf('%s%06d', $prefix, $nextNumber);
     }
+
+    /**
+     * Generate sequential Clinical Document Number: DOC-YYYY-000001
+     */
+    public static function generateDocumentNumber(string $tenantId): string
+    {
+        $year = date('Y');
+        $prefix = "DOC-{$year}-";
+
+        $latest = DB::table('clinical_documents')
+            ->where('tenant_id', $tenantId)
+            ->where('document_number', 'like', "{$prefix}%")
+            ->orderByDesc('document_number')
+            ->value('document_number');
+
+        $nextNumber = 1;
+        if ($latest && preg_match('/-(\d+)$/', $latest, $matches)) {
+            $nextNumber = ((int) $matches[1]) + 1;
+        }
+
+        return sprintf('%s%06d', $prefix, $nextNumber);
+    }
 }

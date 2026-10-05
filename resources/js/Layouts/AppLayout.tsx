@@ -5,7 +5,8 @@ import {
     LayoutDashboard, Users, Calendar, Stethoscope,
     BedDouble, Siren, Pill, FlaskConical, ScanLine, Scissors,
     Receipt, Shield, Menu, X, Check,
-    Building, Clock, CalendarRange, Banknote, TrendingUp, HeartPulse
+    Building, Clock, CalendarRange, Banknote, TrendingUp, HeartPulse,
+    Bell, FileCheck, FolderLock
 } from 'lucide-react';
 import { PageProps } from '@/types';
 import { Badge } from '@/Components/ui/Badge';
@@ -58,6 +59,10 @@ export const AppLayout: React.FC<{ children: React.ReactNode; title?: string }> 
         { header: 'Specialized Portals' },
         { label: 'Doctor Workstation', href: '/doctor/workstation', icon: Stethoscope, current: route().current('doctor.workstation*'), badge: 'Cockpit' },
         { label: 'Patient Portal', href: '/portal/patient', icon: HeartPulse, current: route().current('portal.patient*'), badge: 'Self-Service' },
+        { header: 'Security & Documents' },
+        { label: 'Notifications & Alerts', href: '/notifications', icon: Bell, current: route().current('notifications.*'), badge: 'Multi-Channel' },
+        { label: 'Cryptographic Audit Trail', href: '/audit/compliance', icon: FileCheck, current: route().current('audit.*'), badge: 'Hash-Chain' },
+        { label: 'Clinical Document Vault', href: '/documents', icon: FolderLock, current: route().current('documents.*'), badge: 'HIPAA/S3' },
         { header: 'Hospital & Governance' },
         { label: 'Buildings, Cabins & Wards', href: '/facility', icon: Building, current: route().current('facility.*') },
         { label: 'Staff Directory', href: '/users', icon: Users, current: route().current('users.*') },
@@ -140,6 +145,16 @@ export const AppLayout: React.FC<{ children: React.ReactNode; title?: string }> 
                                 )}
                             </div>
                         )}
+
+                        {/* Notifications Bell Link */}
+                        <Link
+                            href="/notifications"
+                            className="relative p-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+                            title="Notifications & Alerts"
+                        >
+                            <Bell className="w-5 h-5" />
+                            <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
+                        </Link>
 
                         {/* User Profile Menu */}
                         <div className="relative">

@@ -27,6 +27,10 @@ class AuditLog extends Model
         'new_values',
         'ip_address',
         'user_agent',
+        'previous_hash',
+        'current_hash',
+        'is_break_glass',
+        'justification',
         'created_at',
     ];
 
@@ -34,6 +38,7 @@ class AuditLog extends Model
         'action' => AuditAction::class,
         'old_values' => 'array',
         'new_values' => 'array',
+        'is_break_glass' => 'boolean',
         'created_at' => 'datetime',
     ];
 

@@ -3,6 +3,7 @@
 use App\Modules\Accounting\Http\Controllers\AccountingController;
 use App\Modules\Analytics\Http\Controllers\ExecutiveAnalyticsController;
 use App\Modules\Appointment\Http\Controllers\AppointmentController;
+use App\Modules\Audit\Http\Controllers\AuditComplianceController;
 use App\Modules\Auth\Http\Controllers\AuthenticatedSessionController;
 use App\Modules\Auth\Http\Controllers\TenantOnboardingController;
 use App\Modules\Auth\Http\Controllers\UserController;
@@ -18,6 +19,7 @@ use App\Modules\HR\Http\Controllers\AttendanceController;
 use App\Modules\HR\Http\Controllers\PayrollController;
 use App\Modules\HR\Http\Controllers\RosterController;
 use App\Modules\IPD\Http\Controllers\AdmissionController;
+use App\Modules\Notification\Http\Controllers\NotificationController;
 use App\Modules\Nursing\Http\Controllers\NursingController;
 use App\Modules\Opd\Http\Controllers\OpdVisitController;
 use App\Modules\Opd\Http\Controllers\PrescriptionController;
@@ -29,6 +31,7 @@ use App\Modules\Pharmacy\Http\Controllers\ProcurementController;
 use App\Modules\Portal\Http\Controllers\DoctorWorkstationController;
 use App\Modules\Portal\Http\Controllers\PatientPortalController;
 use App\Modules\RBAC\Http\Controllers\RoleController;
+use App\Modules\Storage\Http\Controllers\DocumentStorageController;
 use App\Modules\Tenancy\Models\Branch;
 use App\Modules\Tenancy\Models\Tenant;
 use Illuminate\Http\Request;
@@ -230,4 +233,23 @@ Route::middleware('auth')->group(function () {
     Route::get('/doctor/workstation', [DoctorWorkstationController::class, 'index'])->name('doctor.workstation.index');
     Route::post('/doctor/workstation/consultation', [DoctorWorkstationController::class, 'completeConsultation'])->name('doctor.workstation.complete');
     Route::post('/doctor/workstation/templates', [DoctorWorkstationController::class, 'storeOrderTemplate'])->name('doctor.workstation.templates.store');
+
+    // Phase 10: Multi-Channel Notifications & Clinical Alerts
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::post('/notifications/mark-read/{id}', [NotificationController::class, 'markAsRead'])->name('notifications.mark_read');
+    Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllRead'])->name('notifications.mark_all_read');
+    Route::post('/notifications/dispatch', [NotificationController::class, 'dispatchAlert'])->name('notifications.dispatch');
+
+    // Phase 10: Cryptographic Audit Trail & Break-Glass Protocol
+    Route::get('/audit/compliance', [AuditComplianceController::class, 'index'])->name('audit.compliance.index');
+    Route::post('/audit/compliance/verify', [AuditComplianceController::class, 'verifyChain'])->name('audit.compliance.verify');
+    Route::post('/audit/compliance/break-glass', [AuditComplianceController::class, 'breakGlass'])->name('audit.compliance.break_glass');
+
+    // Phase 10: Secure Document & Medical Attachment Storage
+    Route::get('/documents', [DocumentStorageController::class, 'index'])->name('documents.index');
+    Route::post('/documents', [DocumentStorageController::class, 'store'])->name('documents.store');
+    Route::get('/documents/{document}/download', [DocumentStorageController::class, 'download'])->name('documents.download');
+    Route::get('/documents/{document}/secure-download', [DocumentStorageController::class, 'download'])->name('documents.secure-download');
+    Route::post('/documents/{document}/temporary-url', [DocumentStorageController::class, 'temporaryUrl'])->name('documents.temporary_url');
+    Route::post('/documents/{document}/verify-checksum', [DocumentStorageController::class, 'verifyChecksum'])->name('documents.verify_checksum');
 });
