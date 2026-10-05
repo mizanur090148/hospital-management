@@ -1,6 +1,7 @@
 <?php
 
 use App\Modules\Accounting\Http\Controllers\AccountingController;
+use App\Modules\Analytics\Http\Controllers\ExecutiveAnalyticsController;
 use App\Modules\Appointment\Http\Controllers\AppointmentController;
 use App\Modules\Auth\Http\Controllers\AuthenticatedSessionController;
 use App\Modules\Auth\Http\Controllers\TenantOnboardingController;
@@ -13,6 +14,9 @@ use App\Modules\Diagnostics\Http\Controllers\LaboratoryController;
 use App\Modules\Diagnostics\Http\Controllers\RadiologyController;
 use App\Modules\Emergency\Http\Controllers\EmergencyController;
 use App\Modules\Facility\Http\Controllers\FacilityController;
+use App\Modules\HR\Http\Controllers\AttendanceController;
+use App\Modules\HR\Http\Controllers\PayrollController;
+use App\Modules\HR\Http\Controllers\RosterController;
 use App\Modules\IPD\Http\Controllers\AdmissionController;
 use App\Modules\Nursing\Http\Controllers\NursingController;
 use App\Modules\Opd\Http\Controllers\OpdVisitController;
@@ -187,4 +191,27 @@ Route::middleware('auth')->group(function () {
     Route::get('/accounting/general-ledger', [AccountingController::class, 'index'])->name('accounting.ledger.index');
     Route::post('/accounting/accounts', [AccountingController::class, 'storeAccount'])->name('accounting.accounts.store');
     Route::post('/accounting/journal-entries', [AccountingController::class, 'storeJournalEntry'])->name('accounting.journal_entries.store');
+
+    // Phase 8: Hospital HR & Staff Shift Rostering
+    Route::get('/hr/rosters', [RosterController::class, 'index'])->name('hr.rosters.index');
+    Route::post('/hr/rosters/templates', [RosterController::class, 'storeTemplate'])->name('hr.rosters.templates.store');
+    Route::post('/hr/rosters', [RosterController::class, 'storeRoster'])->name('hr.rosters.store');
+    Route::patch('/hr/rosters/{roster}/status', [RosterController::class, 'updateStatus'])->name('hr.rosters.status');
+
+    // Phase 8: Staff Attendance & Leave Management
+    Route::get('/hr/attendance', [AttendanceController::class, 'index'])->name('hr.attendance.index');
+    Route::post('/hr/attendance/clock-in', [AttendanceController::class, 'clockIn'])->name('hr.attendance.clock_in');
+    Route::post('/hr/attendance/{attendance}/clock-out', [AttendanceController::class, 'clockOut'])->name('hr.attendance.clock_out');
+    Route::post('/hr/leaves', [AttendanceController::class, 'storeLeave'])->name('hr.leaves.store');
+    Route::patch('/hr/leaves/{leave}/review', [AttendanceController::class, 'reviewLeave'])->name('hr.leaves.review');
+
+    // Phase 8: Staff Salary Structures & Monthly Payroll Engine
+    Route::get('/hr/payroll', [PayrollController::class, 'index'])->name('hr.payroll.index');
+    Route::post('/hr/payroll/structures', [PayrollController::class, 'storeStructure'])->name('hr.payroll.structures.store');
+    Route::post('/hr/payroll/generate', [PayrollController::class, 'generateMonthlyPayroll'])->name('hr.payroll.generate');
+    Route::patch('/hr/payroll/{payroll}/approve', [PayrollController::class, 'approve'])->name('hr.payroll.approve');
+    Route::post('/hr/payroll/{payroll}/disburse', [PayrollController::class, 'disburse'])->name('hr.payroll.disburse');
+
+    // Phase 8: Executive C-Suite Hospital Analytics & Real-Time Intelligence
+    Route::get('/analytics/executive', [ExecutiveAnalyticsController::class, 'index'])->name('analytics.executive');
 });

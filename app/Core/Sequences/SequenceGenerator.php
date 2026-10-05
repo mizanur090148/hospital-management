@@ -392,4 +392,26 @@ class SequenceGenerator
 
         return sprintf('%s%06d', $prefix, $nextNumber);
     }
+
+    /**
+     * Generate sequential Payslip Number: PAY-YYYY-000001
+     */
+    public static function generatePayslipNumber(string $tenantId): string
+    {
+        $year = date('Y');
+        $prefix = "PAY-{$year}-";
+
+        $latest = DB::table('payrolls')
+            ->where('tenant_id', $tenantId)
+            ->where('payslip_number', 'like', "{$prefix}%")
+            ->orderByDesc('payslip_number')
+            ->value('payslip_number');
+
+        $nextNumber = 1;
+        if ($latest && preg_match('/-(\d+)$/', $latest, $matches)) {
+            $nextNumber = ((int) $matches[1]) + 1;
+        }
+
+        return sprintf('%s%06d', $prefix, $nextNumber);
+    }
 }

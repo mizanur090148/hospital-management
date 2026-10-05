@@ -5,7 +5,7 @@ import {
     LayoutDashboard, Users, Calendar, Stethoscope,
     BedDouble, Siren, Pill, FlaskConical, ScanLine, Scissors,
     Receipt, Shield, Menu, X, Check,
-    Building
+    Building, Clock, CalendarRange, Banknote, TrendingUp
 } from 'lucide-react';
 import { PageProps } from '@/types';
 import { Badge } from '@/Components/ui/Badge';
@@ -49,6 +49,12 @@ export const AppLayout: React.FC<{ children: React.ReactNode; title?: string }> 
         { label: 'Invoices & Cashier POS', href: '/billing/invoices', icon: Receipt, current: route().current('billing.invoices.*') },
         { label: 'Insurance & Claims', href: '/billing/insurance', icon: Shield, current: route().current('billing.insurance.*'), badge: 'TPA' },
         { label: 'General Ledger & COA', href: '/accounting/general-ledger', icon: Building2, current: route().current('accounting.*'), badge: 'Balanced' },
+        { header: 'Hospital HR & Workforce' },
+        { label: 'Staff Duty Rosters', href: '/hr/rosters', icon: CalendarRange, current: route().current('hr.rosters.*') },
+        { label: 'Attendance & Leaves', href: '/hr/attendance', icon: Clock, current: route().current('hr.attendance.*') },
+        { label: 'Payroll & Compensation', href: '/hr/payroll', icon: Banknote, current: route().current('hr.payroll.*'), badge: 'GL Sync' },
+        { header: 'Executive Intelligence' },
+        { label: 'Hospital KPI Analytics', href: '/analytics/executive', icon: TrendingUp, current: route().current('analytics.executive*'), badge: 'Realtime' },
         { header: 'Hospital & Governance' },
         { label: 'Buildings, Cabins & Wards', href: '/facility', icon: Building, current: route().current('facility.*') },
         { label: 'Staff Directory', href: '/users', icon: Users, current: route().current('users.*') },

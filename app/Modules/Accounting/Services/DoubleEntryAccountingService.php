@@ -12,6 +12,7 @@ use App\Modules\Accounting\Models\JournalEntryItem;
 use App\Modules\Billing\Models\InsuranceClaim;
 use App\Modules\Billing\Models\Invoice;
 use App\Modules\Billing\Models\Payment;
+use App\Modules\HR\Models\Payroll;
 use Illuminate\Support\Facades\DB;
 use RuntimeException;
 
@@ -31,6 +32,7 @@ class DoubleEntryAccountingService
         // 2000s: LIABILITIES
         ['code' => '2001', 'name' => 'Patient Advance Deposits & Prepayments', 'type' => AccountType::Liability, 'is_system' => true],
         ['code' => '2100', 'name' => 'Accounts Payable - Medical Vendors', 'type' => AccountType::Liability, 'is_system' => true],
+        ['code' => '2150', 'name' => 'Salaries & Payroll Withholdings Payable', 'type' => AccountType::Liability, 'is_system' => true],
         ['code' => '2200', 'name' => 'Unearned Clinical Service Revenues', 'type' => AccountType::Liability, 'is_system' => true],
 
         // 3000s: EQUITY
@@ -52,6 +54,7 @@ class DoubleEntryAccountingService
         ['code' => '5100', 'name' => 'Medical & Surgical Supplies Expense', 'type' => AccountType::Expense, 'is_system' => true],
         ['code' => '5200', 'name' => 'Insurance Claim Disallowances & Bad Debts', 'type' => AccountType::Expense, 'is_system' => true],
         ['code' => '5300', 'name' => 'Diagnostic Laboratory Reagents Expense', 'type' => AccountType::Expense, 'is_system' => true],
+        ['code' => '5400', 'name' => 'Staff Salaries & Healthcare Wages Expense', 'type' => AccountType::Expense, 'is_system' => true],
     ];
 
     /**
@@ -449,5 +452,68 @@ class DoubleEntryAccountingService
     public function getTrialBalance(string $tenantId, ?string $asOfDate = null): array
     {
         return $this->generateTrialBalance($tenantId, $asOfDate);
+    }
+
+    /**
+     * Post balanced journal entry when a Payroll payslip is disbursed.
+     * Dr. Staff Salaries & Healthcare Wages Expense (Gross Salary)
+     * Cr. Salaries & Payroll Withholdings Payable (Total Deductions)
+     * Cr. Operating Bank Account / Cash in Hand (Net Salary)
+     */
+    public function postPayrollDisbursement(Payroll $payroll, ?string $userId = null): JournalEntry
+    {
+        $this->ensureStandardChartOfAccounts($payroll->tenant_id);
+
+        $creditAccountCode = match ($payroll->payment_method) {
+            'CASH' => '1001', // Cash in Hand
+            default => '1002', // Operating Bank Account
+        };
+
+        $gross = round((float) $payroll->gross_salary, 2);
+        $deductions = round((float) $payroll->total_deductions, 2);
+        $net = round((float) $payroll->net_salary, 2);
+
+        // Adjust for rounding if gross != deductions + net
+        $diff = round($gross - ($deductions + $net), 2);
+        if ($diff !== 0.0) {
+            $gross = round($deductions + $net, 2);
+        }
+
+        $lines = [
+            [
+                'account_code' => '5400', // Salaries Expense
+                'entry_type' => 'DEBIT',
+                'amount' => $gross,
+                'narration' => "Gross salary for {$payroll->user?->name} ({$payroll->salary_month})",
+            ],
+        ];
+
+        if ($deductions > 0) {
+            $lines[] = [
+                'account_code' => '2150', // Payroll Withholdings Payable
+                'entry_type' => 'CREDIT',
+                'amount' => $deductions,
+                'narration' => "Taxes, PF & deductions for payslip #{$payroll->payslip_number}",
+            ];
+        }
+
+        if ($net > 0) {
+            $lines[] = [
+                'account_code' => $creditAccountCode,
+                'entry_type' => 'CREDIT',
+                'amount' => $net,
+                'narration' => "Net salary disbursed to {$payroll->user?->name} via {$payroll->payment_method}",
+            ];
+        }
+
+        return $this->createJournalEntry(
+            tenantId: $payroll->tenant_id,
+            postingDate: $payroll->paid_at ? $payroll->paid_at->toDateString() : now()->toDateString(),
+            description: "Payroll Disbursed #{$payroll->payslip_number} ({$payroll->salary_month})",
+            lines: $lines,
+            referenceType: 'Payroll',
+            referenceId: $payroll->id,
+            userId: $userId
+        );
     }
 }
