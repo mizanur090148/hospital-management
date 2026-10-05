@@ -5,6 +5,7 @@ use App\Modules\AI\Http\Controllers\ClinicalScribeController;
 use App\Modules\AI\Http\Controllers\ClinicalSummaryController;
 use App\Modules\AI\Http\Controllers\MedicalRagController;
 use App\Modules\Analytics\Http\Controllers\ExecutiveAnalyticsController;
+use App\Modules\Analytics\Http\Controllers\SystemHealthController;
 use App\Modules\Appointment\Http\Controllers\AppointmentController;
 use App\Modules\Audit\Http\Controllers\AuditComplianceController;
 use App\Modules\Auth\Http\Controllers\AuthenticatedSessionController;
@@ -50,6 +51,9 @@ Route::middleware('guest')->group(function () {
     Route::get('/register-hospital', [TenantOnboardingController::class, 'create'])->name('hospital.register');
     Route::post('/register-hospital', [TenantOnboardingController::class, 'store']);
 });
+
+// Phase 13: Public System Health Diagnostic Probe (Containers & Balancers)
+Route::get('/api/health', [SystemHealthController::class, 'apiHealth'])->name('api.health');
 
 // Authenticated Clinical & Hospital Management
 Route::middleware('auth')->group(function () {
@@ -284,4 +288,7 @@ Route::middleware('auth')->group(function () {
     // Phase 12: SuperAdmin Global SaaS Management Cockpit
     Route::get('/saas/admin/cockpit', [SuperAdminSaaSController::class, 'cockpit'])->name('saas.admin.cockpit');
     Route::patch('/saas/admin/plans/{plan}', [SuperAdminSaaSController::class, 'updatePlan'])->name('saas.admin.plans.update');
+
+    // Phase 13: Hardening & System Health Monitoring Dashboard
+    Route::get('/system/health', [SystemHealthController::class, 'dashboard'])->name('system.health.index');
 });

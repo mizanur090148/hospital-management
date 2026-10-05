@@ -4,6 +4,7 @@ use App\Core\RBAC\Middleware\RequirePermission;
 use App\Core\Tenancy\Middleware\ResolveTenant;
 use App\Core\Tenancy\Middleware\SetPostgresRlsSession;
 use App\Http\Middleware\HandleInertiaRequests;
+use App\Http\Middleware\SecurityHeadersMiddleware;
 use App\Modules\SaaS\Http\Middleware\EnforceFeatureAccess;
 use App\Modules\SaaS\Http\Middleware\EnforceSubscriptionQuota;
 use Illuminate\Foundation\Application;
@@ -22,6 +23,7 @@ return Application::configure(basePath: dirname(__DIR__))
             ResolveTenant::class,
             SetPostgresRlsSession::class,
             HandleInertiaRequests::class,
+            SecurityHeadersMiddleware::class,
         ]);
 
         $middleware->alias([

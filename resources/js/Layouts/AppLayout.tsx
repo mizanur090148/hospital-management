@@ -8,7 +8,7 @@ import {
     Building, Clock, CalendarRange, Banknote, TrendingUp, HeartPulse,
     Bell, FileCheck, FolderLock,
     Mic, BookOpen, FileCheck2, Sparkles,
-    CreditCard, Gauge
+    CreditCard, Gauge, Server
 } from 'lucide-react';
 import { PageProps } from '@/types';
 import { Badge } from '@/Components/ui/Badge';
@@ -76,6 +76,7 @@ export const AppLayout: React.FC<{ children: React.ReactNode; title?: string }> 
         { label: 'Buildings, Cabins & Wards', href: '/facility', icon: Building, current: route().current('facility.*') },
         { label: 'Staff Directory', href: '/users', icon: Users, current: route().current('users.*') },
         { label: 'Roles & RBAC', href: '/roles', icon: Shield, current: route().current('roles.*') },
+        { label: 'System Health & Probes', href: '/system/health', icon: Server, current: route().current('system.health.*'), badge: 'Probes' },
     ];
 
     return (
