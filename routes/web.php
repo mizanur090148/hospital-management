@@ -109,6 +109,7 @@ Route::middleware('auth')->group(function () {
 
     // Phase 3: Patient Master Registry
     Route::get('/patients', [PatientController::class, 'index'])->name('patients.index');
+    Route::get('/patients/create', [PatientController::class, 'create'])->name('patients.create');
     Route::post('/patients', [PatientController::class, 'store'])->name('patients.store');
     Route::get('/patients/{id}', [PatientController::class, 'show'])->name('patients.show');
     Route::put('/patients/{id}', [PatientController::class, 'update'])->name('patients.update');

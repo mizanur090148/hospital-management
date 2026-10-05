@@ -171,6 +171,37 @@ class ClinicalCoreAndOpdTest extends TestCase
         $this->assertEquals('Penicillin', $patient->allergies[0]['substance']);
     }
 
+    public function test_can_render_dedicated_patient_registration_page(): void
+    {
+        $response = $this->actingAs($this->adminUser)->get('/patients/create');
+
+        $response->assertStatus(200);
+        $response->assertInertia(fn ($page) => $page
+            ->component('Patients/Create')
+            ->has('bloodGroups')
+            ->has('genders')
+            ->has('nextMrn')
+        );
+    }
+
+    public function test_can_register_patient_and_redirect_to_dossier(): void
+    {
+        $response = $this->actingAs($this->adminUser)->post('/patients', [
+            'first_name' => 'Eleanor',
+            'last_name' => 'Vane',
+            'dob' => '1992-08-20',
+            'gender' => 'FEMALE',
+            'blood_group' => 'B+',
+            'phone' => '+1 (555) 345-6789',
+            'email' => 'eleanor.vane@test.io',
+            'redirect_to_dossier' => true,
+        ]);
+
+        $patient = Patient::where('email', 'eleanor.vane@test.io')->first();
+        $this->assertNotNull($patient);
+        $response->assertRedirect("/patients/{$patient->id}");
+    }
+
     public function test_patient_records_are_tenant_isolated(): void
     {
         // Tenant A creates patient

@@ -138,14 +138,15 @@ export default function PatientsIndex({ patients, filters, bloodGroups, genders,
                         </p>
                     </div>
 
-                    <Button
-                        variant="primary"
-                        onClick={() => setIsRegisterModalOpen(true)}
-                        className="shadow-sm shadow-cyan-600/30 self-start sm:self-auto"
-                    >
-                        <Plus className="w-4 h-4 mr-2" />
-                        Register New Patient
-                    </Button>
+                    <Link href={route('patients.create')}>
+                        <Button
+                            variant="primary"
+                            className="shadow-sm shadow-cyan-600/30 self-start sm:self-auto"
+                        >
+                            <Plus className="w-4 h-4 mr-2" />
+                            Register New Patient
+                        </Button>
+                    </Link>
                 </div>
 
                 {/* Filter and Search Bar */}
@@ -230,7 +231,13 @@ export default function PatientsIndex({ patients, filters, bloodGroups, genders,
                                         <td colSpan={7} className="px-6 py-12 text-center text-slate-400">
                                             <Users className="w-10 h-10 mx-auto mb-2 text-slate-300 stroke-[1.5]" />
                                             <p className="font-medium text-slate-600">No patient records found</p>
-                                            <p className="text-xs text-slate-400 mt-1">Try modifying your search or click "Register New Patient" to enroll one.</p>
+                                            <p className="text-xs text-slate-400 mt-1">Try modifying your search or enroll a new patient into the registry.</p>
+                                            <Link href={route('patients.create')}>
+                                                <Button variant="outline" size="sm" className="mt-3">
+                                                    <Plus className="w-3.5 h-3.5 mr-1" />
+                                                    Register New Patient
+                                                </Button>
+                                            </Link>
                                         </td>
                                     </tr>
                                 ) : (

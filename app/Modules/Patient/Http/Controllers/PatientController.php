@@ -62,6 +62,21 @@ class PatientController extends Controller
     }
 
     /**
+     * Show the dedicated form for registering a new patient.
+     */
+    public function create(): Response
+    {
+        $tenantId = app(TenantContext::class)->getTenantId() ?? request()->user()?->tenant_id;
+        $nextMrn = $tenantId ? SequenceGenerator::generateMrn($tenantId) : 'MRN-'.date('Y').'-000001';
+
+        return Inertia::render('Patients/Create', [
+            'bloodGroups' => array_column(BloodGroup::cases(), 'value'),
+            'genders' => array_column(Gender::cases(), 'value'),
+            'nextMrn' => $nextMrn,
+        ]);
+    }
+
+    /**
      * Store a newly created patient with sequential MRN.
      */
     public function store(Request $request): RedirectResponse
@@ -100,7 +115,11 @@ class PatientController extends Controller
         $validated['mrn'] = SequenceGenerator::generateMrn($tenantId);
         $validated['status'] = PatientStatus::Active;
 
-        Patient::create($validated);
+        $patient = Patient::create($validated);
+
+        if ($request->boolean('redirect_to_dossier')) {
+            return redirect()->route('patients.show', $patient->id)->with('success', "Patient registered successfully with MRN {$validated['mrn']}.");
+        }
 
         return redirect()->route('patients.index')->with('success', "Patient registered successfully with MRN {$validated['mrn']}.");
     }
