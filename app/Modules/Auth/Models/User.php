@@ -9,6 +9,7 @@ use App\Core\RBAC\Traits\HasRolesAndPermissions;
 use App\Core\Tenancy\Traits\BelongsToTenant;
 use App\Modules\Clinical\Models\Doctor;
 use App\Modules\Facility\Models\Department;
+use App\Modules\Patient\Models\Patient;
 use App\Modules\Tenancy\Models\Branch;
 use App\Modules\Tenancy\Models\Tenant;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
@@ -85,6 +86,11 @@ class User extends Authenticatable
         return $this->hasOne(Doctor::class, 'user_id');
     }
 
+    public function patient(): HasOne
+    {
+        return $this->hasOne(Patient::class, 'user_id');
+    }
+
     public function isSuperAdmin(): bool
     {
         return $this->user_type === UserType::SuperAdmin;
@@ -103,6 +109,11 @@ class User extends Authenticatable
     public function isNurse(): bool
     {
         return $this->user_type === UserType::Nurse;
+    }
+
+    public function isPatient(): bool
+    {
+        return $this->user_type === UserType::Patient;
     }
 
     public function isActive(): bool

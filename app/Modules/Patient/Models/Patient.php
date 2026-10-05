@@ -8,6 +8,11 @@ use App\Core\Enums\Gender;
 use App\Core\Enums\PatientStatus;
 use App\Core\Tenancy\Traits\BelongsToTenant;
 use App\Modules\Appointment\Models\Appointment;
+use App\Modules\Auth\Models\User;
+use App\Modules\Billing\Models\Invoice;
+use App\Modules\Diagnostics\Models\LabOrder;
+use App\Modules\Diagnostics\Models\RadiologyOrder;
+use App\Modules\IPD\Models\Admission;
 use App\Modules\Opd\Models\OpdVisit;
 use App\Modules\Opd\Models\Prescription;
 use App\Modules\Tenancy\Models\Tenant;
@@ -26,6 +31,7 @@ class Patient extends Model
 
     protected $fillable = [
         'tenant_id',
+        'user_id',
         'mrn',
         'first_name',
         'last_name',
@@ -40,10 +46,12 @@ class Patient extends Model
         'allergies',
         'chronic_conditions',
         'status',
+        'portal_activated_at',
     ];
 
     protected $casts = [
         'dob' => 'date:Y-m-d',
+        'portal_activated_at' => 'datetime',
         'gender' => Gender::class,
         'blood_group' => BloodGroup::class,
         'emergency_contact' => 'array',
@@ -77,6 +85,11 @@ class Patient extends Model
         return $this->belongsTo(Tenant::class, 'tenant_id');
     }
 
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
     public function appointments(): HasMany
     {
         return $this->hasMany(Appointment::class, 'patient_id');
@@ -90,5 +103,25 @@ class Patient extends Model
     public function prescriptions(): HasMany
     {
         return $this->hasMany(Prescription::class, 'patient_id');
+    }
+
+    public function invoices(): HasMany
+    {
+        return $this->hasMany(Invoice::class, 'patient_id');
+    }
+
+    public function labOrders(): HasMany
+    {
+        return $this->hasMany(LabOrder::class, 'patient_id');
+    }
+
+    public function radiologyOrders(): HasMany
+    {
+        return $this->hasMany(RadiologyOrder::class, 'patient_id');
+    }
+
+    public function admissions(): HasMany
+    {
+        return $this->hasMany(Admission::class, 'patient_id');
     }
 }

@@ -26,6 +26,8 @@ use App\Modules\Patient\Http\Controllers\PatientController;
 use App\Modules\Pharmacy\Http\Controllers\DispensingController;
 use App\Modules\Pharmacy\Http\Controllers\MedicineController;
 use App\Modules\Pharmacy\Http\Controllers\ProcurementController;
+use App\Modules\Portal\Http\Controllers\DoctorWorkstationController;
+use App\Modules\Portal\Http\Controllers\PatientPortalController;
 use App\Modules\RBAC\Http\Controllers\RoleController;
 use App\Modules\Tenancy\Models\Branch;
 use App\Modules\Tenancy\Models\Tenant;
@@ -214,4 +216,18 @@ Route::middleware('auth')->group(function () {
 
     // Phase 8: Executive C-Suite Hospital Analytics & Real-Time Intelligence
     Route::get('/analytics/executive', [ExecutiveAnalyticsController::class, 'index'])->name('analytics.executive');
+
+    // Phase 9: Patient Self-Service Portal
+    Route::get('/portal/patient', [PatientPortalController::class, 'dashboard'])->name('portal.patient.dashboard');
+    Route::get('/portal/patient/appointments', [PatientPortalController::class, 'appointments'])->name('portal.patient.appointments');
+    Route::post('/portal/patient/appointments', [PatientPortalController::class, 'bookAppointment'])->name('portal.patient.appointments.store');
+    Route::delete('/portal/patient/appointments/{appointment}', [PatientPortalController::class, 'cancelAppointment'])->name('portal.patient.appointments.cancel');
+    Route::get('/portal/patient/medical-records', [PatientPortalController::class, 'medicalRecords'])->name('portal.patient.records');
+    Route::get('/portal/patient/billing', [PatientPortalController::class, 'billing'])->name('portal.patient.billing');
+    Route::post('/portal/patient/billing/{invoice}/pay', [PatientPortalController::class, 'payInvoice'])->name('portal.patient.billing.pay');
+
+    // Phase 9: Doctor Clinical Workstation (Single-Screen Rapid Charting & CPOE)
+    Route::get('/doctor/workstation', [DoctorWorkstationController::class, 'index'])->name('doctor.workstation.index');
+    Route::post('/doctor/workstation/consultation', [DoctorWorkstationController::class, 'completeConsultation'])->name('doctor.workstation.complete');
+    Route::post('/doctor/workstation/templates', [DoctorWorkstationController::class, 'storeOrderTemplate'])->name('doctor.workstation.templates.store');
 });

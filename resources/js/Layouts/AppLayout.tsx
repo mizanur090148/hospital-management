@@ -5,7 +5,7 @@ import {
     LayoutDashboard, Users, Calendar, Stethoscope,
     BedDouble, Siren, Pill, FlaskConical, ScanLine, Scissors,
     Receipt, Shield, Menu, X, Check,
-    Building, Clock, CalendarRange, Banknote, TrendingUp
+    Building, Clock, CalendarRange, Banknote, TrendingUp, HeartPulse
 } from 'lucide-react';
 import { PageProps } from '@/types';
 import { Badge } from '@/Components/ui/Badge';
@@ -55,6 +55,9 @@ export const AppLayout: React.FC<{ children: React.ReactNode; title?: string }> 
         { label: 'Payroll & Compensation', href: '/hr/payroll', icon: Banknote, current: route().current('hr.payroll.*'), badge: 'GL Sync' },
         { header: 'Executive Intelligence' },
         { label: 'Hospital KPI Analytics', href: '/analytics/executive', icon: TrendingUp, current: route().current('analytics.executive*'), badge: 'Realtime' },
+        { header: 'Specialized Portals' },
+        { label: 'Doctor Workstation', href: '/doctor/workstation', icon: Stethoscope, current: route().current('doctor.workstation*'), badge: 'Cockpit' },
+        { label: 'Patient Portal', href: '/portal/patient', icon: HeartPulse, current: route().current('portal.patient*'), badge: 'Self-Service' },
         { header: 'Hospital & Governance' },
         { label: 'Buildings, Cabins & Wards', href: '/facility', icon: Building, current: route().current('facility.*') },
         { label: 'Staff Directory', href: '/users', icon: Users, current: route().current('users.*') },
