@@ -100,7 +100,7 @@ export default function PatientsCreate({ bloodGroups, genders, nextMrn }: Patien
     const handleSubmit = (e: React.FormEvent, openDossier: boolean) => {
         e.preventDefault();
         setData('redirect_to_dossier', openDossier);
-        post(route('patients.store'));
+        post('/patients');
     };
 
     return (
@@ -111,7 +111,7 @@ export default function PatientsCreate({ bloodGroups, genders, nextMrn }: Patien
                     <div className="space-y-1">
                         <div className="flex items-center gap-2 text-xs font-semibold text-slate-500">
                             <Link
-                                href={route('patients.index')}
+                                href="/patients"
                                 className="hover:text-cyan-600 transition-colors flex items-center gap-1"
                             >
                                 <ArrowLeft className="w-3.5 h-3.5" />
@@ -135,7 +135,7 @@ export default function PatientsCreate({ bloodGroups, genders, nextMrn }: Patien
                     </div>
 
                     <div className="flex items-center gap-3">
-                        <Link href={route('patients.index')}>
+                        <Link href="/patients">
                             <Button variant="outline" size="md">
                                 Cancel
                             </Button>
@@ -630,7 +630,7 @@ export default function PatientsCreate({ bloodGroups, genders, nextMrn }: Patien
                                     </div>
 
                                     <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
-                                        <Link href={route('patients.index')}>
+                                        <Link href="/patients">
                                             <Button type="button" variant="outline" size="md">
                                                 Cancel
                                             </Button>

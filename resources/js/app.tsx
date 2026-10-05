@@ -12,9 +12,15 @@ const routeMap: Record<string, string> = {
     'dashboard': '/dashboard',
     'home': '/dashboard',
     'logout': '/logout',
+    'patients.index': '/patients',
+    'patients.create': '/patients/create',
+    'patients.store': '/patients',
     'facility.index': '/facility',
     'users.index': '/users',
     'roles.index': '/roles',
+    'opd.workstation': '/opd',
+    'appointments.index': '/appointments',
+    'doctors.index': '/doctors',
 };
 
 if (typeof window.route === 'undefined') {
@@ -28,12 +34,36 @@ if (typeof window.route === 'undefined') {
                         const base = pattern.replace('.*', '');
                         return currentPath.startsWith(`/${base}`);
                     }
-                    const mapped = routeMap[pattern] || `/${pattern}`;
+                    const mapped = routeMap[pattern] || `/${pattern.replace(/\./g, '/')}`;
                     return currentPath === mapped || (pattern === 'home' && currentPath === '/');
                 },
             };
         }
-        return routeMap[name] || `/${name}`;
+
+        let path = routeMap[name];
+        if (!path) {
+            if (name.endsWith('.index')) {
+                path = `/${name.replace('.index', '')}`;
+            } else if (name.endsWith('.create')) {
+                path = `/${name.replace('.create', '')}/create`;
+            } else if (name.endsWith('.store')) {
+                path = `/${name.replace('.store', '')}`;
+            } else {
+                path = `/${name.replace(/\./g, '/')}`;
+            }
+        }
+
+        if (params !== undefined && params !== null) {
+            if (typeof params === 'object') {
+                Object.keys(params).forEach((key) => {
+                    path = path.replace(`{${key}}`, params[key]);
+                });
+            } else {
+                path = path.includes('{') ? path.replace(/\{[^}]+\}/, String(params)) : `${path}/${params}`;
+            }
+        }
+
+        return path;
     });
 }
 
