@@ -74,13 +74,13 @@ export default function PatientsCreate({ bloodGroups, genders, nextMrn }: Patien
     // Form Completion Calculation
     const completionScore = useMemo(() => {
         let score = 0;
-        if (data.first_name) score += 15;
-        if (data.last_name) score += 15;
-        if (data.dob) score += 15;
+        if (data.first_name) score += 25;
+        if (data.last_name) score += 10;
+        if (data.dob) score += 20;
         if (data.phone) score += 20;
         if (data.blood_group && data.blood_group !== 'UNKNOWN') score += 10;
-        if (data.email) score += 10;
-        if (data.emergency_contact.name && data.emergency_contact.phone) score += 15;
+        if (data.email) score += 5;
+        if (data.emergency_contact.name && data.emergency_contact.phone) score += 10;
         return Math.min(score, 100);
     }, [data]);
 
@@ -219,15 +219,17 @@ export default function PatientsCreate({ bloodGroups, genders, nextMrn }: Patien
                                         </div>
 
                                         <div>
-                                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                                                Last Name <span className="text-rose-500">*</span>
-                                            </label>
+                                            <div className="flex items-center justify-between mb-1.5">
+                                                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700">
+                                                    Last Name
+                                                </label>
+                                                <span className="text-[11px] text-slate-400 font-normal">Optional</span>
+                                            </div>
                                             <Input
                                                 value={data.last_name}
                                                 onChange={(e) => setData('last_name', e.target.value)}
-                                                placeholder="e.g. Fleming"
+                                                placeholder="e.g. Rahman / Ahmed (leave blank if single name)"
                                                 error={errors.last_name}
-                                                required
                                             />
                                         </div>
                                     </div>
@@ -713,12 +715,12 @@ export default function PatientsCreate({ bloodGroups, genders, nextMrn }: Patien
                                 <div className="flex items-center gap-3.5">
                                     <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-cyan-600 to-indigo-600 flex items-center justify-center text-white text-xl font-bold shadow-md shadow-cyan-600/20">
                                         {data.first_name ? data.first_name[0].toUpperCase() : 'P'}
-                                        {data.last_name ? data.last_name[0].toUpperCase() : 'T'}
+                                        {data.last_name ? data.last_name[0].toUpperCase() : ''}
                                     </div>
                                     <div className="overflow-hidden">
                                         <h3 className="text-base font-bold text-slate-900 truncate">
                                             {data.first_name || data.last_name
-                                                ? `${data.first_name} ${data.last_name}`
+                                                ? [data.first_name, data.last_name].filter(Boolean).join(' ')
                                                 : 'Patient Name Preview'}
                                         </h3>
                                         <p className="text-xs font-mono font-semibold text-cyan-700 mt-0.5">
@@ -799,7 +801,7 @@ export default function PatientsCreate({ bloodGroups, genders, nextMrn }: Patien
                                 />
                             </div>
                             <p className="text-[11px] text-slate-500">
-                                Required: Name, DOB, Gender, and Phone. Providing blood group and emergency contact enhances patient safety.
+                                Required: First Name, DOB, Gender, and Phone Number. Last Name, blood group, and emergency contact enhance patient safety.
                             </p>
                         </Card>
 

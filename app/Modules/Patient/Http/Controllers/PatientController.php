@@ -83,7 +83,7 @@ class PatientController extends Controller
     {
         $validated = $request->validate([
             'first_name' => ['required', 'string', 'max:100'],
-            'last_name' => ['required', 'string', 'max:100'],
+            'last_name' => ['nullable', 'string', 'max:100'],
             'dob' => ['required', 'date', 'before_or_equal:today'],
             'gender' => ['required', 'string', 'in:MALE,FEMALE,OTHER'],
             'blood_group' => ['nullable', 'string'],
@@ -152,7 +152,7 @@ class PatientController extends Controller
 
         $validated = $request->validate([
             'first_name' => ['required', 'string', 'max:100'],
-            'last_name' => ['required', 'string', 'max:100'],
+            'last_name' => ['nullable', 'string', 'max:100'],
             'dob' => ['required', 'date', 'before_or_equal:today'],
             'gender' => ['required', 'string', 'in:MALE,FEMALE,OTHER'],
             'blood_group' => ['nullable', 'string'],

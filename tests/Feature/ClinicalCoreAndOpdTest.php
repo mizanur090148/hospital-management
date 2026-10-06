@@ -202,6 +202,25 @@ class ClinicalCoreAndOpdTest extends TestCase
         $response->assertRedirect("/patients/{$patient->id}");
     }
 
+    public function test_can_register_patient_without_last_name(): void
+    {
+        $response = $this->actingAs($this->adminUser)->post('/patients', [
+            'first_name' => 'Anowara',
+            'last_name' => null,
+            'dob' => '1975-06-15',
+            'gender' => 'FEMALE',
+            'blood_group' => 'O+',
+            'phone' => '+880 1712-998877',
+        ]);
+
+        $response->assertRedirect('/patients');
+
+        $patient = Patient::where('first_name', 'Anowara')->first();
+        $this->assertNotNull($patient);
+        $this->assertNull($patient->last_name);
+        $this->assertEquals('Anowara', $patient->full_name);
+    }
+
     public function test_patient_records_are_tenant_isolated(): void
     {
         // Tenant A creates patient

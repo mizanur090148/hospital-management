@@ -395,12 +395,11 @@ export default function PatientsIndex({ patients, filters, bloodGroups, genders,
                                         {errors.first_name && <p className="text-xs text-rose-500 mt-1">{errors.first_name}</p>}
                                     </div>
                                     <div>
-                                        <label className="block text-xs font-semibold text-slate-700 mb-1">Last Name *</label>
+                                        <label className="block text-xs font-semibold text-slate-700 mb-1">Last Name (Optional)</label>
                                         <Input
                                             value={data.last_name}
                                             onChange={(e) => setData('last_name', e.target.value)}
-                                            required
-                                            placeholder="e.g. Doe"
+                                            placeholder="e.g. Rahman (leave blank if single name)"
                                         />
                                         {errors.last_name && <p className="text-xs text-rose-500 mt-1">{errors.last_name}</p>}
                                     </div>
