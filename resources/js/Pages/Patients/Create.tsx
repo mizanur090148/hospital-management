@@ -18,6 +18,17 @@ interface PatientsCreateProps {
     nextMrn: string;
 }
 
+const bangladeshDivisions = [
+    'Dhaka',
+    'Chattogram',
+    'Rajshahi',
+    'Khulna',
+    'Barishal',
+    'Sylhet',
+    'Rangpur',
+    'Mymensingh',
+];
+
 export default function PatientsCreate({ bloodGroups, genders, nextMrn }: PatientsCreateProps) {
     const [redirectToDossier, setRedirectToDossier] = useState(true);
 
@@ -38,9 +49,9 @@ export default function PatientsCreate({ bloodGroups, genders, nextMrn }: Patien
         address: {
             street: '',
             city: '',
-            state: '',
+            state: 'Dhaka',
             postal_code: '',
-            country: 'USA',
+            country: 'Bangladesh',
         },
         allergies: [] as Array<{ substance: string; severity: string; reaction: string }>,
         chronic_conditions: [] as Array<{ condition: string; diagnosed_year: string; notes: string }>,
@@ -148,7 +159,7 @@ export default function PatientsCreate({ bloodGroups, genders, nextMrn }: Patien
                             className="shadow-sm shadow-cyan-600/30"
                         >
                             <UserCheck className="w-4 h-4 mr-1.5" />
-                            Register & Open Dossier
+                            Register
                         </Button>
                     </div>
                 </div>
@@ -279,13 +290,13 @@ export default function PatientsCreate({ bloodGroups, genders, nextMrn }: Patien
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
                                         <div>
                                             <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                                                National ID / Passport / SSN
+                                                National ID (NID) / Birth Reg / Passport
                                             </label>
                                             <Input
                                                 leftIcon={<IdCard className="w-4 h-4" />}
                                                 value={data.national_id}
                                                 onChange={(e) => setData('national_id', e.target.value)}
-                                                placeholder="e.g. NID-987654321 or Passport #"
+                                                placeholder="e.g. 10 or 17-digit NID / Birth Reg # / Passport"
                                                 error={errors.national_id}
                                             />
                                         </div>
@@ -314,13 +325,13 @@ export default function PatientsCreate({ bloodGroups, genders, nextMrn }: Patien
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <div>
                                             <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                                                Primary Phone Number <span className="text-rose-500">*</span>
+                                                Phone Number <span className="text-rose-500">*</span>
                                             </label>
                                             <Input
                                                 leftIcon={<Phone className="w-4 h-4" />}
                                                 value={data.phone}
                                                 onChange={(e) => setData('phone', e.target.value)}
-                                                placeholder="+1 (555) 019-2834"
+                                                placeholder="01712-345678 or +880 1712-345678"
                                                 error={errors.phone}
                                                 required
                                             />
@@ -341,44 +352,69 @@ export default function PatientsCreate({ bloodGroups, genders, nextMrn }: Patien
                                         </div>
                                     </div>
 
-                                    {/* Address Details */}
+                                    {/* Address Details (Bangladesh) */}
                                     <div className="space-y-4 pt-2">
-                                        <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
-                                            <MapPin className="w-3.5 h-3.5 text-slate-400" />
-                                            Residential Address
-                                        </h4>
+                                        <div className="flex items-center justify-between">
+                                            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                                                <MapPin className="w-3.5 h-3.5 text-slate-400" />
+                                                Address (Bangladesh)
+                                            </h4>
+                                            <span className="text-[11px] text-cyan-700 bg-cyan-50 border border-cyan-200/60 rounded px-2 py-0.5 font-medium">
+                                                Division & Thana Format
+                                            </span>
+                                        </div>
                                         <div>
+                                            <label className="block text-xs font-medium text-slate-600 mb-1">
+                                                Village / Road / House / Area
+                                            </label>
                                             <Input
-                                                placeholder="Street Address (e.g. 742 Evergreen Terrace)"
+                                                placeholder="e.g. House #12, Road #5, Dhanmondi or Vill: Ramnagar, Post: ..."
                                                 value={data.address.street}
                                                 onChange={(e) => setData('address', { ...data.address, street: e.target.value })}
                                             />
                                         </div>
-                                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                                             <div>
+                                                <label className="block text-xs font-medium text-slate-600 mb-1">
+                                                    Thana / Upazila / City
+                                                </label>
                                                 <Input
-                                                    placeholder="City"
+                                                    placeholder="e.g. Dhanmondi / Savar"
                                                     value={data.address.city}
                                                     onChange={(e) => setData('address', { ...data.address, city: e.target.value })}
                                                 />
                                             </div>
                                             <div>
-                                                <Input
-                                                    placeholder="State / Region"
+                                                <label className="block text-xs font-medium text-slate-600 mb-1">
+                                                    Division / District
+                                                </label>
+                                                <select
                                                     value={data.address.state}
                                                     onChange={(e) => setData('address', { ...data.address, state: e.target.value })}
-                                                />
+                                                    className="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-sm bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 shadow-2xs"
+                                                >
+                                                    <option value="">Select Division</option>
+                                                    {bangladeshDivisions.map((div) => (
+                                                        <option key={div} value={div}>{div}</option>
+                                                    ))}
+                                                </select>
                                             </div>
                                             <div>
+                                                <label className="block text-xs font-medium text-slate-600 mb-1">
+                                                    Post Code
+                                                </label>
                                                 <Input
-                                                    placeholder="Postal Code"
+                                                    placeholder="e.g. 1205"
                                                     value={data.address.postal_code}
                                                     onChange={(e) => setData('address', { ...data.address, postal_code: e.target.value })}
                                                 />
                                             </div>
                                             <div>
+                                                <label className="block text-xs font-medium text-slate-600 mb-1">
+                                                    Country
+                                                </label>
                                                 <Input
-                                                    placeholder="Country"
+                                                    placeholder="Bangladesh"
                                                     value={data.address.country}
                                                     onChange={(e) => setData('address', { ...data.address, country: e.target.value })}
                                                 />
@@ -435,7 +471,7 @@ export default function PatientsCreate({ bloodGroups, genders, nextMrn }: Patien
                                             </label>
                                             <Input
                                                 leftIcon={<Phone className="w-4 h-4" />}
-                                                placeholder="+1 (555) 999-8877"
+                                                placeholder="01812-345678 or +880 1812-345678"
                                                 value={data.emergency_contact.phone}
                                                 onChange={(e) => setData('emergency_contact', { ...data.emergency_contact, phone: e.target.value })}
                                             />
